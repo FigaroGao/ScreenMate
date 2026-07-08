@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Auto Mode — ScreenMate{% endblock %}
+{% block nav_auto %}active{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-arrow-repeat me-2"></i>Auto Mode</h2>
+
+<div class="row g-3">
+    <!-- Control Panel -->
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header fw-semibold">Controls</div>
+            <div class="card-body">
+                <div class="d-grid gap-2 mb-3">
+                    <button class="btn btn-success btn-lg" id="btn-auto-start">
+                        <i class="bi bi-play-fill me-1"></i> Start
+                    </button>
+                    <button class="btn btn-danger" id="btn-auto-stop" disabled>
+                        <i class="bi bi-stop-fill me-1"></i> Stop
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <label for="auto-interval" class="form-label">
+                        Screenshot Interval: <strong id="interval-label">20s</strong>
+                    </label>
+                    <input type="range" class="form-range" id="auto-interval"
+                        min="5" max="120" value="20" step="5">
+                </div>
+
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" id="auto-summary" checked>
+                    <label class="form-check-label" for="auto-summary">Auto Summary</label>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="auto-chat" checked>
+                    <label class="form-check-label" for="auto-chat">Auto Chat</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Panel -->
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header fw-semibold">Status</div>
+            <div class="card-body">
+                <table class="table table-sm mb-0">
+                    <tbody>
+                        <tr>
+                            <td class="text-secondary">Running Status</td>
+                            <td><span class="badge bg-secondary" id="auto-running-status">Stopped</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Screenshots Taken</td>
+                            <td id="auto-shot-count">0</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Context Messages</td>
+                            <td id="auto-context-count">0</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Last Screenshot</td>
+                            <td id="auto-last-shot">never</td>
+                        </tr>
+                        <tr>
+                            <td class="text-secondary">Elapsed Time</td>
+                            <td id="auto-elapsed">--</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monitor Placeholder -->
+    <div class="col-12">
+        <div class="card border-secondary">
+            <div class="card-header fw-semibold">
+                <i class="bi bi-display me-1"></i> Monitor View
+                <span class="badge bg-secondary ms-2">Coming Soon</span>
+            </div>
+            <div class="card-body text-center text-secondary py-5">
+                <i class="bi bi-display fs-1 d-block mb-2"></i>
+                Real-time screen preview will appear here in a future version.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auto.js') }}"></script>
+{% endblock %}

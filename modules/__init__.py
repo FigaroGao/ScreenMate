@@ -1,0 +1,1 @@
+"""ScreenMate core modules package."""

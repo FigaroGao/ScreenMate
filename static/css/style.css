@@ -1,0 +1,204 @@
+/* ============================================================
+   ScreenMate — Dark-mode developer-tool style
+   ============================================================ */
+
+/* ---- Sidebar ---- */
+.sidebar {
+    min-height: calc(100vh - 56px);
+    background-color: var(--bs-dark);
+    border-right: 1px solid var(--bs-border-color);
+}
+
+.sidebar .nav-link {
+    color: var(--bs-secondary);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.92rem;
+    transition: background 0.15s, color 0.15s;
+}
+
+.sidebar .nav-link:hover {
+    color: var(--bs-light);
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar .nav-link.active {
+    color: var(--bs-light);
+    background-color: rgba(13, 110, 253, 0.25);
+    font-weight: 600;
+}
+
+/* ---- Status dot ---- */
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
+}
+
+/* ---- Stat cards ---- */
+.stat-card {
+    border: 1px solid var(--bs-border-color);
+    transition: border-color 0.2s;
+}
+
+.stat-card:hover {
+    border-color: var(--bs-primary);
+}
+
+/* ---- Response area ---- */
+.response-area {
+    font-family: var(--bs-font-monospace);
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: var(--bs-dark);
+    color: var(--bs-light);
+    border-radius: 6px;
+    padding: 12px;
+    min-height: 150px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* ---- Logs table ---- */
+#logs-table {
+    font-family: var(--bs-font-monospace);
+    font-size: 0.8rem;
+}
+
+#logs-table td {
+    vertical-align: middle;
+}
+
+/* ---- Architecture diagram ---- */
+.architecture-diagram {
+    font-family: var(--bs-font-monospace);
+    font-size: 0.7rem;
+    line-height: 1.3;
+    max-height: 500px;
+    overflow-y: auto;
+    background: var(--bs-dark);
+    border-radius: 6px;
+    padding: 12px;
+}
+
+/* ---- Global Loading Overlay ---- */
+.global-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.global-loading-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bs-dark);
+    padding: 20px 32px;
+    border-radius: 12px;
+    border: 1px solid var(--bs-border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ---- Toast notifications ---- */
+.toast-container {
+    z-index: 9998;
+}
+
+.toast {
+    backdrop-filter: blur(8px);
+}
+
+/* ---- Utility ---- */
+kbd {
+    font-size: 0.8rem;
+}
+
+/* ---- Markdown rendered content ---- */
+.markdown-body {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--bs-light);
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3,
+.markdown-body h4, .markdown-body h5, .markdown-body h6 {
+    margin-top: 1.2em;
+    margin-bottom: 0.5em;
+    color: var(--bs-light);
+}
+
+.markdown-body code {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+}
+
+.markdown-body pre {
+    background: var(--bs-dark);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 6px;
+    padding: 12px;
+    overflow-x: auto;
+}
+
+.markdown-body pre code {
+    background: none;
+    padding: 0;
+}
+
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.5em 0;
+}
+
+.markdown-body th,
+.markdown-body td {
+    border: 1px solid var(--bs-border-color);
+    padding: 6px 12px;
+    text-align: left;
+}
+
+.markdown-body th {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.markdown-body blockquote {
+    border-left: 3px solid var(--bs-primary);
+    padding-left: 12px;
+    color: var(--bs-secondary);
+    margin: 0.5em 0;
+}
+
+.markdown-body ul, .markdown-body ol {
+    padding-left: 1.5em;
+}
+
+.markdown-body img {
+    max-width: 100%;
+    border-radius: 6px;
+}
+
+/* ---- Responsive tweaks ---- */
+@media (max-width: 768px) {
+    .sidebar {
+        min-height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--bs-border-color);
+    }
+
+    .architecture-diagram {
+        font-size: 0.55rem;
+    }
+}

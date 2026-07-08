@@ -1,0 +1,1 @@
+"""ScreenMate prompt template management."""

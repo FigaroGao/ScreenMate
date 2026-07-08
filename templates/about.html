@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}About — ScreenMate{% endblock %}
+{% block nav_about %}active{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-info-circle me-2"></i>About ScreenMate</h2>
+
+<div class="row g-3">
+    <!-- Project Info -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">
+                    <i class="bi bi-robot me-2"></i>ScreenMate
+                </h4>
+                <p class="text-secondary">
+                    A desktop AI assistant with vision understanding, chat,
+                    text-to-speech, multi-model switching, and context memory.
+                </p>
+                <table class="table table-sm mb-0">
+                    <tr><td class="text-secondary">Version</td><td>{{ config.APP_VERSION }}</td></tr>
+                    <tr><td class="text-secondary">Environment</td><td>{{ config.APP_ENV }}</td></tr>
+                    <tr><td class="text-secondary">Python</td><td>3.11</td></tr>
+                    <tr><td class="text-secondary">Framework</td><td>Flask + Bootstrap 5</td></tr>
+                    <tr><td class="text-secondary">Architecture</td><td>Provider Pattern + Pipeline + MVC</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Work Modes -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header fw-semibold">Work Modes</div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <strong><i class="bi bi-camera me-1"></i>Manual Mode</strong><br>
+                        <small class="text-secondary">Screenshot → Vision → Response → TTS (optional). Quick single-shot analysis.</small>
+                    </li>
+                    <li class="mb-2">
+                        <strong><i class="bi bi-arrow-repeat me-1"></i>Auto Mode</strong><br>
+                        <small class="text-secondary">Continuous observation with context memory and proactive summaries.</small>
+                    </li>
+                    <li>
+                        <strong><i class="bi bi-cpu me-1"></i>Agent Mode</strong>
+                        <span class="badge bg-secondary ms-1">Coming Soon</span><br>
+                        <small class="text-secondary">Autonomous task execution with tool use.</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Architecture Diagram -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header fw-semibold">
+                <i class="bi bi-diagram-3 me-1"></i> Architecture
+            </div>
+            <div class="card-body">
+                <pre class="architecture-diagram text-secondary small mb-0">
+┌─────────────────────────────────────────────────────────┐
+│                      Browser (UI)                        │
+│            Bootstrap 5 + Vanilla JS + ApiClient          │
+│         Toast Notifications + Loading States             │
+└────────────────────────┬────────────────────────────────┘
+                         │ HTTP / REST API
+┌────────────────────────▼────────────────────────────────┐
+│                     Flask Routes                         │
+│         (thin — delegates to Pipelines only)             │
+│   Pages: /  /manual  /auto  /settings  /logs  /about    │
+│   API:   /api/status  /api/manual  /api/auto/*  ...     │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│                   Pipeline Layer                          │
+│   ManualPipeline          AutoPipeline                   │
+│   Screenshot → Vision      Start/Stop → Monitor          │
+│   → TTS → Context          → Context → Summary            │
+│   → Stats → Log            → Stats → Log                  │
+└───────┬──────────────────┬──────────────────────────────┘
+        │                  │
+┌───────▼──────────────────▼──────────────────────────────┐
+│                  Provider Registry                       │
+│   Factory: create_vision()  create_chat()  create_tts() │
+│   ┌─────────┐  ┌─────────┐  ┌─────────┐                │
+│   │ Vision  │  │  Chat   │  │   TTS   │                │
+│   │ Mock    │  │  Mock   │  │  Mock   │                │
+│   │ (OpenAI)│  │(OpenAI) │  │(OpenAI) │  ... future    │
+│   │ (Qwen)  │  │(Claude) │  │(Edge)   │                │
+│   └─────────┘  └─────────┘  └─────────┘                │
+│      All return ProviderResponse (unified)              │
+└─────────────────────────────────────────────────────────┘
+        │                  │                  │
+┌───────▼──────────────────▼──────────────────▼──────────┐
+│                   Infrastructure                         │
+│   Config       Logger       Telemetry     Context        │
+│   .env +       LogManager   StatsCollector Session       │
+│   settings.json  + file log  + Dashboard   Conversation  │
+│                              feeds         Summary        │
+│   SettingsManager            Memory                       │
+│   PromptManager                                          │
+└─────────────────────────────────────────────────────────┘
+                </pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roadmap -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header fw-semibold">Roadmap</div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr><th>Version</th><th>Milestone</th><th>Status</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>v0.1.0</td>
+                                <td>Project skeleton — Flask, Provider pattern, mock providers, Web UI, REST API</td>
+                                <td><span class="badge bg-secondary">Done</span></td>
+                            </tr>
+                            <tr class="table-active">
+                                <td><strong>v0.2.0</strong></td>
+                                <td><strong>Infrastructure — Pipeline layer, unified ProviderResponse, Telemetry, Settings persistence, PromptManager, Toast/Loading, Dashboard real data</strong></td>
+                                <td><span class="badge bg-success">Current</span></td>
+                            </tr>
+                            <tr>
+                                <td>v1.0.0</td>
+                                <td>Real providers — OpenAI Vision/Chat/TTS, real screenshot (mss/PIL), production-ready Manual Mode</td>
+                                <td><span class="badge bg-secondary">Planned</span></td>
+                            </tr>
+                            <tr>
+                                <td>v1.5.0</td>
+                                <td>Multi-provider — Qwen, Gemini, Claude, Ollama, LM Studio, OpenRouter, SiliconFlow</td>
+                                <td><span class="badge bg-secondary">Planned</span></td>
+                            </tr>
+                            <tr>
+                                <td>v2.0.0</td>
+                                <td>Auto Mode real — Background monitor, vision summarization, persistent context (SQLite/Redis), TTS audio playback</td>
+                                <td><span class="badge bg-secondary">Planned</span></td>
+                            </tr>
+                            <tr>
+                                <td>v2.5.0</td>
+                                <td>RAG support, vector memory, long-term context</td>
+                                <td><span class="badge bg-secondary">Planned</span></td>
+                            </tr>
+                            <tr>
+                                <td>v3.0.0</td>
+                                <td>Agent Mode, plugin system, desktop packaging (exe/dmg)</td>
+                                <td><span class="badge bg-secondary">Planned</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

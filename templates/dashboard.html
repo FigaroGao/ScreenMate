@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ScreenMate{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h2>
+
+<div class="row g-3">
+    <!-- Status + Uptime -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-title text-secondary">System Status</h6>
+                        <p class="fs-5 mb-1" id="dash-status">--</p>
+                        <small class="text-secondary">Uptime: <span id="dash-uptime">--</span></small>
+                    </div>
+                    <i class="bi bi-pc-display fs-1 text-primary opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Call Counts -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-title text-secondary">API Calls</h6>
+                        <div class="d-flex gap-3">
+                            <div><small class="text-success">Vision</small><br><strong id="dash-vision-calls">0</strong></div>
+                            <div><small class="text-warning">Chat</small><br><strong id="dash-chat-calls">0</strong></div>
+                            <div><small class="text-info">TTS</small><br><strong id="dash-tts-calls">0</strong></div>
+                        </div>
+                        <small class="text-secondary d-block mt-1">Screenshots: <span id="dash-screenshot-calls">0</span> | Total calls: <span id="dash-total-calls">0</span> | Avg: <span id="dash-avg-latency">--</span></small>
+                    </div>
+                    <i class="bi bi-graph-up fs-1 text-success opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pipeline Runs -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-title text-secondary">Pipeline Runs</h6>
+                        <div class="d-flex gap-3">
+                            <div><small class="text-primary">Manual</small><br><strong id="dash-manual-runs">0</strong></div>
+                            <div><small class="text-warning">Auto</small><br><strong id="dash-auto-runs">0</strong></div>
+                        </div>
+                    </div>
+                    <i class="bi bi-diagram-3 fs-1 text-warning opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-title text-secondary">Context</h6>
+                        <p class="fs-5 mb-0">Messages: <strong id="dash-context-msgs">0</strong></p>
+                    </div>
+                    <i class="bi bi-memory fs-1 text-info opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Last Call -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-title text-secondary">Last Call</h6>
+                        <p class="small mb-0" id="dash-last-call">No calls yet</p>
+                    </div>
+                    <i class="bi bi-clock-history fs-1 text-danger opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Providers -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-title text-secondary">Active Providers</h6>
+                        <p class="small mb-1" id="dash-providers">--</p>
+                        <small class="text-secondary">Logs: <span id="dash-log-count">0</span> entries</small>
+                    </div>
+                    <i class="bi bi-plug fs-1 text-secondary opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

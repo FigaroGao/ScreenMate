@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Logs — ScreenMate{% endblock %}
+{% block nav_logs %}active{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-journal-text me-2"></i>Logs</h2>
+
+<div class="d-flex gap-2 mb-3">
+    <button class="btn btn-outline-light btn-sm" id="btn-refresh-logs">
+        <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+    </button>
+    <button class="btn btn-outline-danger btn-sm" id="btn-clear-logs">
+        <i class="bi bi-trash me-1"></i> Clear
+    </button>
+    <input type="text" class="form-control form-control-sm ms-auto" id="log-search"
+        placeholder="Search logs..." style="max-width:250px;">
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+            <table class="table table-sm table-hover mb-0" id="logs-table">
+                <thead class="table-dark sticky-top">
+                    <tr>
+                        <th style="width:160px;">Timestamp</th>
+                        <th style="width:80px;">Level</th>
+                        <th style="width:180px;">Module</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-tbody">
+                    <tr>
+                        <td colspan="4" class="text-center text-secondary">
+                            Loading logs...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/logs.js') }}"></script>
+{% endblock %}

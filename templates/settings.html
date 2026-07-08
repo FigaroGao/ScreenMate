@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}Settings — ScreenMate{% endblock %}
+{% block nav_settings %}active{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-gear me-2"></i>Settings</h2>
+
+<form id="settings-form">
+    <!-- Vision Provider -->
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">
+            <i class="bi bi-eye me-1"></i> Vision Provider
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <label class="form-label" for="vision-provider-select">Provider</label>
+                    <select class="form-select" id="vision-provider-select" name="VISION_PROVIDER">
+                        <option value="mock">Mock</option>
+                        <option value="openai">OpenAI Compatible</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label" for="vision-api-key">API Key</label>
+                    <input type="password" class="form-control" id="vision-api-key"
+                        name="VISION_API_KEY" placeholder="sk-...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="vision-base-url">Base URL</label>
+                    <input type="text" class="form-control" id="vision-base-url"
+                        name="VISION_BASE_URL" placeholder="https://api.openai.com/v1">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="vision-model">Model Name</label>
+                    <input type="text" class="form-control" id="vision-model"
+                        name="VISION_MODEL_NAME" placeholder="gpt-4o" value="gpt-4o">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="vision-max-tokens">Max Tokens</label>
+                    <input type="number" class="form-control" id="vision-max-tokens"
+                        name="VISION_MAX_TOKENS" value="1024">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="vision-temp">Temperature</label>
+                    <input type="number" class="form-control" id="vision-temp"
+                        name="VISION_TEMPERATURE" value="0.7" step="0.1" min="0" max="2">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="vision-top-p">Top P</label>
+                    <input type="number" class="form-control" id="vision-top-p"
+                        name="VISION_TOP_P" value="0.9" step="0.1" min="0" max="1">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Provider -->
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">
+            <i class="bi bi-chat-dots me-1"></i> Chat Provider
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label" for="chat-api-key">API Key</label>
+                    <input type="password" class="form-control" id="chat-api-key"
+                        name="CHAT_API_KEY" placeholder="sk-...">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="chat-base-url">Base URL</label>
+                    <input type="text" class="form-control" id="chat-base-url"
+                        name="CHAT_BASE_URL" placeholder="https://api.openai.com/v1">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="chat-model">Model</label>
+                    <input type="text" class="form-control" id="chat-model"
+                        name="CHAT_MODEL" placeholder="gpt-4o" value="gpt-4o">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="chat-max-tokens">Max Tokens</label>
+                    <input type="number" class="form-control" id="chat-max-tokens"
+                        name="CHAT_MAX_TOKENS" value="2048">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="chat-temp">Temperature</label>
+                    <input type="number" class="form-control" id="chat-temp"
+                        name="CHAT_TEMPERATURE" value="0.7" step="0.1" min="0" max="2">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="chat-top-p">Top P</label>
+                    <input type="number" class="form-control" id="chat-top-p"
+                        name="CHAT_TOP_P" value="0.9" step="0.1" min="0" max="1">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TTS Provider -->
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">
+            <i class="bi bi-volume-up me-1"></i> TTS Provider
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label class="form-label" for="tts-voice">Voice</label>
+                    <select class="form-select" id="tts-voice" name="TTS_VOICE">
+                        <option value="default">Default (Mock)</option>
+                        <option value="alloy">Alloy</option>
+                        <option value="echo">Echo</option>
+                        <option value="fable">Fable</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="tts-speed">Speed</label>
+                    <input type="number" class="form-control" id="tts-speed"
+                        name="TTS_SPEED" value="1.0" step="0.1" min="0.25" max="4">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prompt Template -->
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">
+            <i class="bi bi-chat-square-text me-1"></i> Prompt Template
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label class="form-label" for="prompt-template">Template</label>
+                    <select class="form-select" id="prompt-template" name="PROMPT_TEMPLATE">
+                        <option value="assistant">Assistant</option>
+                        <option value="programming">Programming Assistant</option>
+                        <option value="game">Game Assistant</option>
+                        <option value="translator">Translator</option>
+                        <option value="ocr">OCR</option>
+                        <option value="study">Study</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="system-prompt">System Prompt</label>
+                    <textarea class="form-control" id="system-prompt" name="SYSTEM_PROMPT" rows="3"
+                        >You are ScreenMate, a helpful desktop AI assistant with vision capabilities.</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex gap-2 mb-4">
+        <button type="submit" class="btn btn-primary" id="btn-save-settings">
+            <i class="bi bi-check-lg me-1"></i> Save Settings
+        </button>
+        <button type="button" class="btn btn-outline-secondary" id="btn-reset-settings">
+            <i class="bi bi-arrow-counterclockwise me-1"></i> Restore Defaults
+        </button>
+        <button type="button" class="btn btn-outline-info" id="btn-test-connection">
+            <i class="bi bi-plug me-1"></i> Test Connection (Vision)
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}
