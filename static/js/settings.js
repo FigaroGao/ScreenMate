@@ -123,4 +123,133 @@
             }
         });
     }
+
+    // ==================================================================
+    // 5. Hotkey Controls
+    // ==================================================================
+    var btnRecord = document.getElementById('btn-record-shortcut');
+    var btnEnable = document.getElementById('btn-enable-hotkey');
+    var btnDisable = document.getElementById('btn-disable-hotkey');
+    var hotkeyDisplay = document.getElementById('hotkey-display');
+    var hotkeyStatusText = document.getElementById('hotkey-status-text');
+
+    var isRecording = false;
+    var recordedKeys = [];
+
+    // Load hotkey info on page open
+    loadHotkeyInfo();
+
+    async function loadHotkeyInfo() {
+        try {
+            var data = await api.get('/api/hotkey/status');
+            if (data.success && data.hotkey) {
+                if (hotkeyDisplay) hotkeyDisplay.value = data.hotkey.shortcut || 'ctrl+shift+a';
+                if (hotkeyStatusText) {
+                    hotkeyStatusText.textContent = 'Status: ' +
+                        (data.hotkey.registered ? 'Active (' + data.hotkey.shortcut + ')' : 'Not registered');
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to load hotkey info:', err);
+        }
+    }
+
+    // Record shortcut
+    if (btnRecord) {
+        btnRecord.addEventListener('click', function () {
+            if (isRecording) {
+                // Stop recording
+                stopRecording();
+                return;
+            }
+            // Start recording
+            isRecording = true;
+            recordedKeys = [];
+            btnRecord.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Listening... Press keys...';
+            btnRecord.classList.remove('btn-outline-warning');
+            btnRecord.classList.add('btn-warning');
+        });
+    }
+
+    // Capture keydown during recording
+    document.addEventListener('keydown', function (e) {
+        if (!isRecording) return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        var parts = [];
+        if (e.ctrlKey) parts.push('ctrl');
+        if (e.shiftKey) parts.push('shift');
+        if (e.altKey) parts.push('alt');
+        if (e.metaKey) parts.push('win');
+
+        // Ignore standalone modifier key presses
+        var nonModifiers = ['Control', 'Shift', 'Alt', 'Meta'];
+        if (nonModifiers.indexOf(e.key) === -1) {
+            var key = e.key.toLowerCase();
+            if (key === ' ') key = 'space';
+            parts.push(key);
+
+            var shortcut = parts.join('+');
+            finishRecording(shortcut);
+        }
+    });
+
+    async function finishRecording(shortcut) {
+        stopRecording();
+        if (hotkeyDisplay) hotkeyDisplay.value = shortcut;
+
+        try {
+            var data = await api.post('/api/hotkey/change', { shortcut: shortcut });
+            if (data.success) {
+                toast('Shortcut changed to ' + shortcut, 'success');
+                await loadHotkeyInfo();
+            } else {
+                toast(data.message, 'danger');
+            }
+        } catch (err) {
+            toast(err.message, 'danger');
+        }
+    }
+
+    function stopRecording() {
+        isRecording = false;
+        recordedKeys = [];
+        if (btnRecord) {
+            btnRecord.innerHTML = '<i class="bi bi-record-circle me-1"></i> Record Shortcut';
+            btnRecord.classList.remove('btn-warning');
+            btnRecord.classList.add('btn-outline-warning');
+        }
+    }
+
+    // Enable / Disable
+    if (btnEnable) {
+        btnEnable.addEventListener('click', async function () {
+            btnLoading(btnEnable, 'Enabling...');
+            try {
+                var data = await api.post('/api/hotkey/start');
+                toast(data.message, data.success ? 'success' : 'warning');
+                await loadHotkeyInfo();
+            } catch (err) {
+                toast(err.message, 'danger');
+            } finally {
+                btnRestore(btnEnable);
+            }
+        });
+    }
+
+    if (btnDisable) {
+        btnDisable.addEventListener('click', async function () {
+            btnLoading(btnDisable, 'Disabling...');
+            try {
+                var data = await api.post('/api/hotkey/stop');
+                toast(data.message, data.success ? 'success' : 'info');
+                await loadHotkeyInfo();
+            } catch (err) {
+                toast(err.message, 'danger');
+            } finally {
+                btnRestore(btnDisable);
+            }
+        });
+    }
 })();

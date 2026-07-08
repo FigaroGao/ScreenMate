@@ -194,6 +194,81 @@
     setInterval(updateServerTime, 10000);
 
     // ==================================================================
+    // Pipeline state polling (shared by manual, hotkey, auto)
+    // ==================================================================
+    var _lastProgress = 'idle';
+    var _lastRunCount = 0;
+
+    async function pollPipelineState() {
+        try {
+            var data = await window.ScreenMate.api.get('/api/pipeline/status');
+            if (!data.success) return;
+
+            var p = data.pipeline;
+            var progress = p.progress;
+            var runCount = p.pipeline_runs;
+
+            // Detect transition: idle → running (new pipeline started)
+            if (progress !== 'idle' && _lastProgress === 'idle') {
+                var src = p.source === 'hotkey' ? ' [Hotkey]' : '';
+                if (progress === 'capturing') {
+                    window.ScreenMate.toast('Capturing screen...' + src, 'info');
+                } else if (progress === 'analyzing') {
+                    window.ScreenMate.toast('Analyzing...' + src, 'info');
+                }
+            }
+
+            // Detect completion
+            if (runCount !== _lastRunCount && runCount > 0) {
+                if (progress === 'completed') {
+                    var latency = p.last_result ? (p.last_result.processing_time_ms || '?') : '?';
+                    window.ScreenMate.toast('Completed in ' + latency + 'ms', 'success');
+                    // If Manual Mode page is open, update the response area
+                    updateManualModeResult(p.last_result);
+                } else if (progress === 'failed') {
+                    window.ScreenMate.toast(p.last_error || 'Pipeline failed', 'danger');
+                }
+            }
+
+            _lastProgress = progress;
+            _lastRunCount = runCount;
+        } catch (_) {
+            // Silent — poll failures are not user-facing
+        }
+    }
+
+    function updateManualModeResult(result) {
+        if (!result || !result.vision) return;
+        // Update Manual Mode response area if on that page
+        var responseContent = document.getElementById('response-content');
+        var responseRendered = document.getElementById('response-rendered');
+        var responseStatus = document.getElementById('response-status');
+        var btnToggleView = document.getElementById('btn-toggle-view');
+
+        if (responseContent && result.vision.content) {
+            responseContent.textContent = result.vision.content;
+            if (responseStatus) {
+                responseStatus.textContent = (result.vision.model || '') +
+                    ' (' + (result.processing_time_ms || '?') + 'ms)';
+                responseStatus.className = 'badge bg-success';
+            }
+            // Render markdown if available
+            if (responseRendered && typeof markdownit !== 'undefined') {
+                var md = markdownit({ html: false, linkify: true, typographer: true, breaks: true });
+                responseRendered.innerHTML = md.render(result.vision.content);
+                if (btnToggleView) btnToggleView.style.display = 'inline-block';
+                // Show rendered view
+                responseContent.style.display = 'none';
+                responseRendered.style.display = 'block';
+                if (btnToggleView) btnToggleView.innerHTML = '<i class="bi bi-file-earmark-code"></i> Raw';
+            }
+        }
+    }
+
+    // Start polling at 500ms
+    setInterval(pollPipelineState, 500);
+
+    // ==================================================================
     // Export to global
     // ==================================================================
 

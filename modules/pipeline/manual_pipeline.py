@@ -15,6 +15,7 @@ from config.settings import Config
 from modules.context.manager import ContextManager
 from modules.logger.logger import get_logger, LogManager
 from modules.pipeline.pipeline_result import PipelineResult
+from modules.pipeline.state import PipelineState, PipelineProgress
 from modules.screenshot.capture import ScreenshotCapture
 from modules.telemetry.stats import StatsCollector
 from providers import create_vision, create_tts
@@ -95,6 +96,7 @@ class ManualPipeline:
 
         # ---- Step 1: Screenshot ----
         shot = None
+        PipelineState.instance().set_progress(PipelineProgress.CAPTURING)
         try:
             if screenshot_type == "fullscreen":
                 shot = self._screenshot.capture_fullscreen()
@@ -102,6 +104,9 @@ class ManualPipeline:
                 shot = self._screenshot.capture_region()
 
             if not shot.get("success", True):
+                pstate = PipelineState.instance()
+                pstate.set_failed(f"Screenshot failed: {shot.get('error', 'unknown')}")
+                self._stats.record_pipeline_run("manual")
                 return PipelineResult.fail(
                     error=f"Screenshot failed: {shot.get('error', 'unknown')}",
                     processing_time_ms=(time.perf_counter() - t_start) * 1000,
@@ -129,6 +134,7 @@ class ManualPipeline:
         )
 
         # ---- Step 3: Vision analysis ----
+        PipelineState.instance().set_progress(PipelineProgress.ANALYZING)
         vision_response = None
         try:
             vision = create_vision(effective_vision or None)
@@ -163,6 +169,9 @@ class ManualPipeline:
 
             if not vision_response.success:
                 self._stats.record_pipeline_run("manual")
+                PipelineState.instance().set_failed(
+                    vision_response.error or "Vision analysis failed"
+                )
                 return PipelineResult.fail(
                     error=vision_response.error or "Vision analysis failed",
                     processing_time_ms=(time.perf_counter() - t_start) * 1000,
@@ -204,7 +213,7 @@ class ManualPipeline:
 
         elapsed_ms = (time.perf_counter() - t_start) * 1000
 
-        return PipelineResult.ok(
+        final_result = PipelineResult.ok(
             message="Manual mode completed",
             processing_time_ms=round(elapsed_ms, 2),
             vision_response=vision_response,
@@ -222,6 +231,9 @@ class ManualPipeline:
                 },
             },
         )
+
+        PipelineState.instance().set_completed(final_result.to_dict())
+        return final_result
 
     # ------------------------------------------------------------------
     # Internal helpers

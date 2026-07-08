@@ -114,7 +114,16 @@ def api_status() -> Any:
 @api_bp.route("/manual", methods=["POST"])
 def api_manual() -> Any:
     """Handle a manual-mode request via ManualPipeline."""
+    from modules.pipeline.state import PipelineState
+
     data: dict = request.get_json(silent=True) or {}
+
+    pstate = PipelineState.instance()
+    if not pstate.set_running("manual"):
+        return jsonify({
+            "success": False,
+            "message": "Pipeline is already running. Please wait.",
+        })
 
     pipeline = get_manual_pipeline()
     result = pipeline.execute(
@@ -449,3 +458,86 @@ def api_get_prompt(template_id: str) -> Any:
                 },
             })
     return jsonify({"success": False, "message": "Template not found."}), 404
+
+
+# ---------------------------------------------------------------------------
+# API — Pipeline State (generic — works for manual, hotkey, auto)
+# ---------------------------------------------------------------------------
+
+
+@api_bp.route("/pipeline/status")
+def api_pipeline_status() -> Any:
+    """Return the current pipeline state.
+
+    Frontend polls this to show progress from any source (button, hotkey, auto).
+    """
+    from modules.pipeline.state import PipelineState
+
+    pstate = PipelineState.instance()
+    return jsonify({"success": True, "pipeline": pstate.get_status()})
+
+
+# ---------------------------------------------------------------------------
+# API — Hotkey (input layer control)
+# ---------------------------------------------------------------------------
+
+
+@api_bp.route("/hotkey/start", methods=["POST"])
+def api_hotkey_start() -> Any:
+    """Start the hotkey listener."""
+    from modules.dependencies import get_hotkey_manager
+
+    hm = get_hotkey_manager()
+    if hm is None:
+        return jsonify({"success": False, "message": "HotkeyManager not available."})
+    result = hm.start()
+    return jsonify(result)
+
+
+@api_bp.route("/hotkey/stop", methods=["POST"])
+def api_hotkey_stop() -> Any:
+    """Stop the hotkey listener."""
+    from modules.dependencies import get_hotkey_manager
+
+    hm = get_hotkey_manager()
+    if hm is None:
+        return jsonify({"success": False, "message": "HotkeyManager not available."})
+    result = hm.stop()
+    return jsonify(result)
+
+
+@api_bp.route("/hotkey/status")
+def api_hotkey_info() -> Any:
+    """Return current hotkey configuration."""
+    from modules.dependencies import get_hotkey_manager
+
+    hm = get_hotkey_manager()
+    if hm is None:
+        return jsonify({
+            "success": True,
+            "hotkey": {"shortcut": "", "enabled": False, "registered": False},
+        })
+    info = hm.get_info()
+    return jsonify({
+        "success": True,
+        "hotkey": {
+            "shortcut": info.shortcut,
+            "enabled": info.enabled,
+            "registered": info.registered,
+        },
+    })
+
+
+@api_bp.route("/hotkey/change", methods=["POST"])
+def api_hotkey_change() -> Any:
+    """Change the hotkey shortcut."""
+    from modules.dependencies import get_hotkey_manager
+
+    data: dict = request.get_json(silent=True) or {}
+    shortcut: str = data.get("shortcut", "")
+
+    hm = get_hotkey_manager()
+    if hm is None:
+        return jsonify({"success": False, "message": "HotkeyManager not available."})
+    result = hm.change_shortcut(shortcut)
+    return jsonify(result)

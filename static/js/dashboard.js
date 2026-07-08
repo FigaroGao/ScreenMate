@@ -79,6 +79,19 @@
         if (el) el.innerHTML = html;
     }
 
+    async function refreshHotkey() {
+        try {
+            var data = await api.get('/api/hotkey/status');
+            if (data.success && data.hotkey) {
+                setHtml('dash-hotkey', data.hotkey.shortcut || '--');
+                setText('dash-hotkey-status',
+                    data.hotkey.registered ? 'Active' : 'Not registered');
+            }
+        } catch (_) {}
+    }
+
     refreshDashboard();
+    refreshHotkey();
     setInterval(refreshDashboard, 15000);
+    setInterval(refreshHotkey, 15000);
 })();

@@ -74,6 +74,22 @@ manual_pipeline = ManualPipeline(context_manager, screenshot_capture, stats_coll
 auto_pipeline = AutoPipeline(context_manager, auto_monitor, stats_collector)
 
 # ---------------------------------------------------------------------------
+# Initialise HotkeyManager
+# ---------------------------------------------------------------------------
+from modules.hotkey.manager import HotkeyManager  # noqa: E402
+
+hotkey_manager = HotkeyManager(
+    on_trigger=lambda: manual_pipeline.execute(
+        prompt="",
+        template_id=Config.PROMPT_TEMPLATE,
+    ),
+    on_get_settings_manager=lambda: settings_manager,
+)
+# Register hotkey on startup
+result = hotkey_manager.register()
+logger.info("HotkeyManager: %s", result.get("message", "started"))
+
+# ---------------------------------------------------------------------------
 # Wire dependencies for routes
 # ---------------------------------------------------------------------------
 import modules.dependencies as deps  # noqa: E402
@@ -88,6 +104,7 @@ deps.setup(
     settings_manager=settings_manager,
     prompt_manager=prompt_manager,
     log_manager=log_manager,
+    hotkey_manager=hotkey_manager,
 )
 
 # ---------------------------------------------------------------------------

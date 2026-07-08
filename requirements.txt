@@ -11,6 +11,9 @@ Pillow>=10.0,<12.0
 # AI Providers
 openai>=1.0,<2.0
 
+# Hotkey
+keyboard>=0.13,<1.0
+
 # Future (not yet used - reserved for upcoming phases)
 # anthropic>=0.30
 # Pillow>=10.0

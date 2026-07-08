@@ -77,6 +77,9 @@ class Config:
     )
     AUTO_CONTEXT_MAX_LENGTH: int = int(os.getenv("AUTO_CONTEXT_MAX_LENGTH", "50"))
 
+    # ---- Hotkey ----
+    HOTKEY_CAPTURE: str = os.getenv("HOTKEY_CAPTURE", "ctrl+shift+a")
+
     # ---- Logging ----
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "DEBUG")
     LOG_DIR: str = os.getenv("LOG_DIR", "data/logs")

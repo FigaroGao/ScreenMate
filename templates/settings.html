@@ -148,6 +148,40 @@
         </div>
     </div>
 
+    <!-- Hotkey -->
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">
+            <i class="bi bi-keyboard me-1"></i> Capture Shortcut
+        </div>
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label" for="hotkey-display">Current Shortcut</label>
+                    <input type="text" class="form-control font-monospace" id="hotkey-display"
+                        value="ctrl+shift+a" readonly>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-outline-warning w-100" id="btn-record-shortcut">
+                        <i class="bi bi-record-circle me-1"></i> Record Shortcut
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-success w-100" id="btn-enable-hotkey">
+                        <i class="bi bi-play-fill me-1"></i> Enable
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-outline-danger w-100" id="btn-disable-hotkey">
+                        <i class="bi bi-stop-fill me-1"></i> Disable
+                    </button>
+                </div>
+            </div>
+            <small class="text-secondary mt-2 d-block" id="hotkey-status-text">
+                Status: loading...
+            </small>
+        </div>
+    </div>
+
     <!-- Actions -->
     <div class="d-flex gap-2 mb-4">
         <button type="submit" class="btn btn-primary" id="btn-save-settings">
