@@ -74,7 +74,7 @@ class ManualPipeline:
             prompt: User prompt text.
             template_id: Prompt template ID (e.g. ``"programming"``).
                 Empty → use default from Config.
-            screenshot_type: ``"fullscreen"`` or ``"region"``.
+            screenshot_type: ``"fullscreen"``.
             vision_provider: Provider name (empty → use config).
             enable_tts: Whether to synthesise speech.
             tts_provider: Provider name for TTS (empty → use config).
@@ -98,10 +98,7 @@ class ManualPipeline:
         shot = None
         PipelineState.instance().set_progress(PipelineProgress.CAPTURING)
         try:
-            if screenshot_type == "fullscreen":
-                shot = self._screenshot.capture_fullscreen()
-            else:
-                shot = self._screenshot.capture_region()
+            shot = self._screenshot.capture_fullscreen()
 
             if not shot.get("success", True):
                 pstate = PipelineState.instance()

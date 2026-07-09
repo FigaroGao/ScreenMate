@@ -33,6 +33,7 @@ class _State:
     last_error: Optional[str] = None
     last_completed_at: float = 0.0
     pipeline_runs: int = 0
+    history: list = field(default_factory=list)
 
 
 class PipelineState:
@@ -60,11 +61,50 @@ class PipelineState:
                     cls._instance._initialized = False
         return cls._instance
 
+    _MAX_HISTORY = 50
+
     def __init__(self) -> None:
         if self._initialized:
             return
         self._initialized = True
         self._state = _State()
+        self._load_history()
+
+    # ------------------------------------------------------------------
+    # History persistence
+    # ------------------------------------------------------------------
+
+    def _history_file(self) -> "Path":
+        from pathlib import Path
+        from config.settings import Config
+        return Config.get_project_root() / "data" / "history.json"
+
+    def _load_history(self) -> None:
+        """Load saved history from disk."""
+        try:
+            f = self._history_file()
+            if f.exists():
+                import json
+                data = json.loads(f.read_text(encoding="utf-8"))
+                if isinstance(data, list):
+                    self._state.history = data[-self._MAX_HISTORY:]
+        except Exception:
+            pass
+
+    def _save_history(self) -> None:
+        """Persist history to disk as JSON."""
+        try:
+            import json
+            f = self._history_file()
+            f.parent.mkdir(parents=True, exist_ok=True)
+            tmp = f.with_suffix(".tmp")
+            tmp.write_text(
+                json.dumps(self._state.history, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            tmp.replace(f)
+        except Exception:
+            pass
 
     # ------------------------------------------------------------------
     # Singleton access
@@ -98,6 +138,8 @@ class PipelineState:
             self._state.started_at = time.time()
             self._state.last_error = None
             self._state.last_result = None
+            # Desktop notification
+            _notify("ScreenMate", "Capturing & analyzing screen...")
             return True
 
     def set_progress(self, progress: PipelineProgress) -> None:
@@ -121,6 +163,26 @@ class PipelineState:
             self._state.last_result = result
             self._state.last_completed_at = time.time()
             self._state.pipeline_runs += 1
+            # Desktop notification
+            model = result.get("vision", {}).get("model", "")
+            lat = result.get("processing_time_ms", 0)
+            _notify("ScreenMate — Analysis Complete",
+                     f"Model: {model}  |  {lat:.0f}ms")
+            # Add to history
+            self._state.history.append({
+                "timestamp": time.strftime("%H:%M:%S"),
+                "content": (
+                    result.get("vision", {}).get("content", "") or
+                    result.get("message", "")
+                ),
+                "model": result.get("vision", {}).get("model", ""),
+                "latency_ms": result.get("processing_time_ms", 0),
+                "source": self._state.source,
+                "prompt": result.get("prompt", {}).get("user_prompt", ""),
+            })
+            if len(self._state.history) > self._MAX_HISTORY:
+                self._state.history = self._state.history[-self._MAX_HISTORY:]
+            self._save_history()
 
     def set_failed(self, error: str) -> None:
         """Mark the pipeline as failed.
@@ -134,6 +196,7 @@ class PipelineState:
             self._state.last_error = error
             self._state.last_completed_at = time.time()
             self._state.pipeline_runs += 1
+            _notify("ScreenMate — Failed", error[:120])
 
     # ------------------------------------------------------------------
     # Reader API (called by Routes — GET /api/pipeline/status)
@@ -164,6 +227,7 @@ class PipelineState:
                     else None
                 ),
                 "pipeline_runs": s.pipeline_runs,
+                "history": list(s.history),
             }
 
     def is_busy(self) -> bool:
@@ -179,3 +243,16 @@ class PipelineState:
         """Reset to initial idle state."""
         with self._lock:
             self._state = _State()
+
+
+# ------------------------------------------------------------------
+# Module-level helper
+# ------------------------------------------------------------------
+
+def _notify(title: str, message: str) -> None:
+    """Fire-and-forget desktop notification."""
+    try:
+        from modules.notifications.toaster import show
+        show(title, message)
+    except Exception:
+        pass

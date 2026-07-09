@@ -190,6 +190,20 @@ kbd {
     border-radius: 6px;
 }
 
+/* ---- History items ---- */
+.history-item .history-header:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.history-item .history-body {
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.history-item .history-body .markdown-body {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
 /* ---- Responsive tweaks ---- */
 @media (max-width: 768px) {
     .sidebar {

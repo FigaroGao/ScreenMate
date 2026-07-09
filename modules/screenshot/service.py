@@ -90,33 +90,6 @@ class ScreenshotService:
                 "timestamp": time.time(),
             }
 
-    def capture_region(
-        self,
-        left: int = 0,
-        top: int = 0,
-        width: int = 800,
-        height: int = 600,
-    ) -> dict:
-        """Capture a region of the primary monitor.
-
-        This is a stub — returns the full screen for now.  Region
-        capture will be fully implemented in a future version.
-
-        Args:
-            left: Left pixel coordinate.
-            top: Top pixel coordinate.
-            width: Region width.
-            height: Region height.
-
-        Returns:
-            Same structure as :meth:`capture_fullscreen`.
-        """
-        logger.info(
-            "ScreenshotService.capture_region (stub): %d,%d %dx%d",
-            left, top, width, height,
-        )
-        return self.capture_fullscreen()
-
     # ------------------------------------------------------------------
     # Internal
     # ------------------------------------------------------------------

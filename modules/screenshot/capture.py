@@ -70,35 +70,6 @@ class ScreenshotCapture:
         logger.debug("Using mock screenshot fallback")
         return self._mock_result("fullscreen")
 
-    def capture_region(
-        self,
-        x: int = 0,
-        y: int = 0,
-        width: int = 400,
-        height: int = 300,
-    ) -> dict:
-        """Capture a region of the screen.
-
-        Falls back to fullscreen capture for now; region capture is a
-        planned feature.
-
-        Args:
-            x: Left coordinate.
-            y: Top coordinate.
-            width: Region width.
-            height: Region height.
-
-        Returns:
-            Same structure as :meth:`capture_fullscreen`.
-        """
-        if self._service is not None:
-            result = self._service.capture_region(x, y, width, height)
-            if result.get("success", True):
-                return result
-            logger.warning("Real region capture failed, falling back to mock")
-        logger.debug("Using mock screenshot fallback (region)")
-        return self._mock_result("region")
-
     # ------------------------------------------------------------------
     # Internal
     # ------------------------------------------------------------------

@@ -196,8 +196,8 @@
     // ==================================================================
     // Pipeline state polling (shared by manual, hotkey, auto)
     // ==================================================================
-    var _lastProgress = 'idle';
-    var _lastRunCount = 0;
+    var _lastRunCount = null;   // null = not yet initialised
+    var _wasRunning = false;
 
     async function pollPipelineState() {
         try {
@@ -205,64 +205,32 @@
             if (!data.success) return;
 
             var p = data.pipeline;
-            var progress = p.progress;
-            var runCount = p.pipeline_runs;
 
-            // Detect transition: idle → running (new pipeline started)
-            if (progress !== 'idle' && _lastProgress === 'idle') {
-                var src = p.source === 'hotkey' ? ' [Hotkey]' : '';
-                if (progress === 'capturing') {
-                    window.ScreenMate.toast('Capturing screen...' + src, 'info');
-                } else if (progress === 'analyzing') {
-                    window.ScreenMate.toast('Analyzing...' + src, 'info');
-                }
+            // First poll after page load: sync to current state, no toast
+            if (_lastRunCount === null) {
+                _lastRunCount = p.pipeline_runs;
+                _wasRunning = p.running;
+                return;
             }
 
-            // Detect completion
-            if (runCount !== _lastRunCount && runCount > 0) {
-                if (progress === 'completed') {
-                    var latency = p.last_result ? (p.last_result.processing_time_ms || '?') : '?';
-                    window.ScreenMate.toast('Completed in ' + latency + 'ms', 'success');
-                    // If Manual Mode page is open, update the response area
-                    updateManualModeResult(p.last_result);
-                } else if (progress === 'failed') {
+            // --- New pipeline started (transition to running) ---
+            if (p.running && !_wasRunning) {
+                window.ScreenMate.toast('Capturing & analyzing...', 'info');
+            }
+            _wasRunning = p.running;
+
+            // --- Pipeline finished (runCount changed) ---
+            if (p.pipeline_runs !== _lastRunCount && p.pipeline_runs > 0) {
+                if (p.progress === 'completed') {
+                    var lat = p.last_result ? (p.last_result.processing_time_ms || '?') : '?';
+                    window.ScreenMate.toast('Screenshot analyzed in ' + lat + 'ms', 'success');
+                } else if (p.progress === 'failed') {
                     window.ScreenMate.toast(p.last_error || 'Pipeline failed', 'danger');
                 }
+                _lastRunCount = p.pipeline_runs;
             }
 
-            _lastProgress = progress;
-            _lastRunCount = runCount;
-        } catch (_) {
-            // Silent — poll failures are not user-facing
-        }
-    }
-
-    function updateManualModeResult(result) {
-        if (!result || !result.vision) return;
-        // Update Manual Mode response area if on that page
-        var responseContent = document.getElementById('response-content');
-        var responseRendered = document.getElementById('response-rendered');
-        var responseStatus = document.getElementById('response-status');
-        var btnToggleView = document.getElementById('btn-toggle-view');
-
-        if (responseContent && result.vision.content) {
-            responseContent.textContent = result.vision.content;
-            if (responseStatus) {
-                responseStatus.textContent = (result.vision.model || '') +
-                    ' (' + (result.processing_time_ms || '?') + 'ms)';
-                responseStatus.className = 'badge bg-success';
-            }
-            // Render markdown if available
-            if (responseRendered && typeof markdownit !== 'undefined') {
-                var md = markdownit({ html: false, linkify: true, typographer: true, breaks: true });
-                responseRendered.innerHTML = md.render(result.vision.content);
-                if (btnToggleView) btnToggleView.style.display = 'inline-block';
-                // Show rendered view
-                responseContent.style.display = 'none';
-                responseRendered.style.display = 'block';
-                if (btnToggleView) btnToggleView.innerHTML = '<i class="bi bi-file-earmark-code"></i> Raw';
-            }
-        }
+        } catch (_) {}
     }
 
     // Start polling at 500ms

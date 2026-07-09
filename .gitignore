@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 config/settings.json
 data/logs/*.log
+data/history.json
 *.egg-info/
 dist/
 build/

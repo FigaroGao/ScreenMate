@@ -1,0 +1,1 @@
+"""ScreenMate desktop notification module."""

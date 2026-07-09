@@ -221,64 +221,50 @@ class HotkeyManager:
 
         pstate = PipelineState.instance()
 
-        # Check busy state — skip if already running
         if pstate.is_busy():
-            logger.debug("Hotkey pressed but pipeline is busy — skipping")
+            logger.info("Hotkey pressed while busy — skipping")
+            from modules.notifications.toaster import show
+            show("ScreenMate", "Analysis already in progress — please wait.")
             return
 
-        logger.info("Hotkey pressed (%s) — triggering pipeline", self._info.shortcut)
+        self._start_pipeline()
 
-        # Mark pipeline as running
+    def _start_pipeline(self) -> None:
+        """Claim the pipeline and execute. Pipeline manages state internally."""
+        pstate = PipelineState.instance()
+        logger.info("Hotkey triggering pipeline (%s)", self._info.shortcut)
+
         if not pstate.set_running("hotkey"):
-            return  # Another input beat us to it
+            return
 
-        # Execute the pipeline
         try:
-            if self._trigger is None:
-                self._trigger_fallback()
-                return
-
-            pstate.set_progress(PipelineProgress.CAPTURING)
-            result = self._trigger()
-            result_dict = result.to_dict() if hasattr(result, "to_dict") else result
-
-            if result_dict.get("success", True):
-                pstate.set_completed(result_dict)
+            if self._trigger is not None:
+                self._trigger()
             else:
-                pstate.set_failed(result_dict.get("error", "Unknown error"))
-
+                self._trigger_fallback()
         except Exception as exc:
             logger.error("Hotkey pipeline failed: %s", exc)
-            pstate.set_failed(str(exc))
+            if pstate.is_busy():
+                pstate.set_failed(str(exc))
 
     def _trigger_fallback(self) -> None:
-        """Fallback: directly call ManualPipeline when no callback set."""
+        """Fallback: directly call ManualPipeline when no callback is set."""
         from config.settings import Config
 
-        pstate = PipelineState.instance()
         try:
-            from modules.dependencies import (
-                get_manual_pipeline,
-                get_context_manager,
-            )
+            from modules.dependencies import get_manual_pipeline
 
             pipeline = get_manual_pipeline()
             if pipeline is None:
-                pstate.set_failed("ManualPipeline not available")
+                PipelineState.instance().set_failed("ManualPipeline not available")
                 return
 
-            pstate.set_progress(PipelineProgress.ANALYZING)
-            ctx = get_context_manager()
-            prompt = ctx.get_memory("last_prompt") or "" if ctx else ""
-
-            result = pipeline.execute(
-                prompt=prompt,
+            pipeline.execute(
+                prompt="",
                 template_id=Config.PROMPT_TEMPLATE,
             )
-            pstate.set_completed(result.to_dict())
-
         except Exception as exc:
-            pstate.set_failed(str(exc))
+            PipelineState.instance().set_failed(str(exc))
 
     def _unregister_internal(self) -> None:
         """Remove the keyboard hook. Call inside _hotkey_lock."""

@@ -1,36 +1,26 @@
 /**
- * ScreenMate Manual Mode — screenshot -> vision -> markdown response.
- * Uses ApiClient, Toast notifications, loading states, markdown-it.
+ * ScreenMate Manual Mode — displays pipeline results + screenshot history.
+ * Polls /api/pipeline/status for live updates.
  */
 
 (function () {
     'use strict';
 
     var api = window.ScreenMate.api;
-    var toast = window.ScreenMate.toast;
-    var btnLoading = window.ScreenMate.btnLoading;
-    var btnRestore = window.ScreenMate.btnRestore;
+    var escapeHtml = window.ScreenMate.escapeHtml;
 
-    var btnFullscreen = document.getElementById('btn-fullscreen');
-    var btnSend = document.getElementById('btn-send');
-    var btnToggleView = document.getElementById('btn-toggle-view');
-    var promptEl = document.getElementById('manual-prompt');
-    var visionProvider = document.getElementById('vision-provider');
-    var promptTemplate = document.getElementById('prompt-template');
     var responseContent = document.getElementById('response-content');
     var responseRendered = document.getElementById('response-rendered');
     var responseStatus = document.getElementById('response-status');
-    var processingCard = document.getElementById('processing-card');
-    var processingText = document.getElementById('processing-text');
+    var btnToggleView = document.getElementById('btn-toggle-view');
+    var historyList = document.getElementById('history-list');
+    var historyCount = document.getElementById('history-count');
 
-    // Initialize markdown-it if available
+    // --- markdown-it ---
     var md = null;
     if (typeof markdownit !== 'undefined') {
         md = markdownit({
-            html: false,
-            linkify: true,
-            typographer: true,
-            breaks: true,
+            html: false, linkify: true, typographer: true, breaks: true,
             highlight: function (str, lang) {
                 if (lang && window.hljs && window.hljs.getLanguage(lang)) {
                     try {
@@ -39,115 +29,108 @@
                             '</code></pre>';
                     } catch (_) {}
                 }
-                return '<pre class="hljs"><code>' + ScreenMate.escapeHtml(str) + '</code></pre>';
+                return '<pre class="hljs"><code>' + escapeHtml(str) + '</code></pre>';
             },
         });
     }
 
-    var showRaw = true;
+    var showRendered = false;
 
-    function toggleView() {
-        showRaw = !showRaw;
-        responseContent.style.display = showRaw ? 'block' : 'none';
-        responseRendered.style.display = showRaw ? 'none' : 'block';
-        btnToggleView.innerHTML = showRaw ?
-            '<i class="bi bi-markdown"></i> Rendered' :
-            '<i class="bi bi-file-earmark-code"></i> Raw';
-    }
-
+    // --- Toggle raw/rendered ---
     if (btnToggleView) {
-        btnToggleView.addEventListener('click', toggleView);
+        btnToggleView.addEventListener('click', function () {
+            showRendered = !showRendered;
+            responseContent.style.display = showRendered ? 'none' : 'block';
+            responseRendered.style.display = showRendered ? 'block' : 'none';
+            btnToggleView.textContent = showRendered ? 'Raw' : 'Rendered';
+        });
     }
 
-    /**
-     * Render markdown content.
-     * @param {string} text
-     */
-    function renderResponse(text) {
-        responseContent.textContent = text;
+    // --- Render markdown into response area ---
+    function renderResponse(text, model, latency) {
+        responseContent.textContent = text || '(empty)';
+        responseStatus.textContent = (model || '') + ' (' + (latency || '?') + 'ms)';
+        responseStatus.className = 'badge bg-success';
         if (md) {
-            responseRendered.innerHTML = md.render(text);
+            responseRendered.innerHTML = md.render(text || '');
             btnToggleView.style.display = 'inline-block';
-            // Show rendered by default if markdown has structured content
-            if (text.indexOf('```') !== -1 || text.indexOf('##') !== -1 || text.indexOf('|') !== -1) {
-                if (showRaw) toggleView();
-            }
-        } else {
-            responseRendered.innerHTML = '<p class="text-secondary">markdown-it not loaded</p>';
         }
+        // Default to raw view
+        showRendered = false;
+        responseContent.style.display = 'block';
+        responseRendered.style.display = 'none';
+        if (btnToggleView) btnToggleView.textContent = 'Rendered';
     }
 
-    /**
-     * Execute a manual mode request.
-     * @param {string} screenshotType
-     */
-    async function handleSend(screenshotType) {
-        var btn = screenshotType === 'fullscreen' ? btnFullscreen : btnSend;
-        btnLoading(btn || btnSend, 'Processing...');
-        btnLoading(btnSend, 'Processing...');
-
-        processingCard.style.display = 'block';
-        processingText.textContent = 'Capturing screen...';
-        responseStatus.textContent = 'Processing';
-        responseStatus.className = 'badge bg-info';
-        responseContent.textContent = 'Taking screenshot...';
-
-        var visionName = visionProvider.value;
-        if (visionName === 'openai') {
-            processingText.textContent = 'Calling vision API (this may take a few seconds)...';
+    // --- Build history list ---
+    function renderHistory(history) {
+        if (!history || !history.length) {
+            historyList.innerHTML = '<p class="text-secondary text-center py-3 mb-0">No screenshots yet.</p>';
+            if (historyCount) historyCount.textContent = '0 entries';
+            return;
         }
+        if (historyCount) historyCount.textContent = history.length + ' entries';
 
+        // Show newest first
+        var items = history.slice().reverse();
+        var html = '';
+        items.forEach(function (item, idx) {
+            var id = 'hist-' + idx;
+            var firstLine = (item.content || '').split('\n')[0].substring(0, 100);
+            if ((item.content || '').length > 100) firstLine += '...';
+            html += (
+                '<div class="history-item border-bottom border-secondary">' +
+                '  <div class="history-header px-3 py-2 d-flex align-items-center gap-2" ' +
+                '       style="cursor:pointer;" onclick="document.getElementById(\'' + id + '\').classList.toggle(\'d-none\')">' +
+                '    <i class="bi bi-chevron-right small text-secondary history-chevron"></i>' +
+                '    <span class="text-secondary small">' + escapeHtml(item.timestamp) + '</span>' +
+                '    <span class="badge bg-secondary">' + escapeHtml(item.source) + '</span>' +
+                '    <span class="text-truncate small" style="flex:1;">' + escapeHtml(firstLine) + '</span>' +
+                '    <span class="text-secondary small text-nowrap">' + escapeHtml(item.model) + ' ' + (item.latency_ms || 0) + 'ms</span>' +
+                '  </div>' +
+                '  <div id="' + id + '" class="history-body px-3 pb-2 d-none">' +
+                '    <div class="markdown-body small">' + (md ? md.render(item.content || '') : '<pre>' + escapeHtml(item.content || '') + '</pre>') + '</div>' +
+                '  </div>' +
+                '</div>'
+            );
+        });
+        historyList.innerHTML = html;
+    }
+
+    // --- Poll pipeline status ---
+    var lastRunCount = -1;
+    var lastHistoryLen = 0;
+
+    async function poll() {
         try {
-            var data = await api.post('/api/manual', {
-                prompt: promptEl.value.trim(),
-                template_id: promptTemplate.value,
-                screenshot_type: screenshotType,
-                vision_provider: visionName,
-                enable_tts: false,
-            });
+            var data = await api.get('/api/pipeline/status');
+            if (!data.success || !data.pipeline) return;
 
-            processingCard.style.display = 'none';
+            var p = data.pipeline;
 
-            if (data.success) {
-                var latency = data.processing_time_ms || 0;
-                var model = (data.vision && data.vision.model) || 'unknown';
-                responseStatus.textContent = model + ' (' + latency + 'ms)';
-                responseStatus.className = 'badge bg-success';
-
-                var visionContent = (data.vision && data.vision.content) || '';
-                if (visionContent) {
-                    renderResponse(visionContent);
-                } else {
-                    responseContent.textContent = JSON.stringify(data, null, 2);
-                }
-
-                toast('Analyzed in ' + latency + 'ms with ' + model, 'success');
-            } else {
-                responseStatus.textContent = 'Error';
-                responseStatus.className = 'badge bg-danger';
-                var errMsg = data.error || 'Unknown error';
-                responseContent.textContent = errMsg;
-                toast(errMsg, 'danger');
+            // New result arrived?
+            if (p.pipeline_runs !== lastRunCount && p.last_result) {
+                var r = p.last_result;
+                var vis = r.vision || {};
+                renderResponse(vis.content || r.message || '', vis.model || '', r.processing_time_ms || 0);
+                lastRunCount = p.pipeline_runs;
             }
-        } catch (err) {
-            processingCard.style.display = 'none';
-            responseStatus.textContent = 'Error';
-            responseStatus.className = 'badge bg-danger';
-            responseContent.textContent = 'Request failed: ' + err.message;
-            toast(err.message, 'danger');
-        } finally {
-            btnRestore(btn);
-            btnRestore(btnSend);
-        }
+
+            // History changed?
+            if (p.history && p.history.length !== lastHistoryLen) {
+                renderHistory(p.history);
+                lastHistoryLen = p.history.length;
+            }
+
+            // Show progress
+            if (p.running) {
+                responseStatus.textContent = p.progress === 'capturing' ? 'Capturing...' : 'Analyzing...';
+                responseStatus.className = 'badge bg-info';
+            }
+        } catch (_) {}
     }
 
-    btnFullscreen.addEventListener('click', function () { handleSend('fullscreen'); });
-    btnSend.addEventListener('click', function () { handleSend('fullscreen'); });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-            e.preventDefault();
-            handleSend('fullscreen');
-        }
-    });
+    // --- Init ---
+    poll();
+    setInterval(poll, 800);
 })();

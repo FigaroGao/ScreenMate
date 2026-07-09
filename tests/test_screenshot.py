@@ -31,12 +31,6 @@ class TestScreenshotCapture:
         assert len(decoded) > 0
         assert decoded == result["image_bytes"]
 
-    def test_capture_region_returns_expected_structure(self) -> None:
-        capturer = ScreenshotCapture()
-        result = capturer.capture_region(x=0, y=0, width=400, height=300)
-        assert result["success"] is True
-        assert "image_bytes" in result
-
     def test_mock_fallback_works(self) -> None:
         """If mss is unavailable, mock data still works."""
         capturer = ScreenshotCapture()

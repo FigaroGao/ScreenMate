@@ -7,104 +7,37 @@
 {% endblock %}
 
 {% block content %}
-<h2 class="mb-4"><i class="bi bi-camera me-2"></i>Manual Mode</h2>
+<h2 class="mb-3"><i class="bi bi-camera me-2"></i>Manual Mode</h2>
+<p class="text-secondary small mb-3">
+    Press <kbd>Ctrl+Shift+X</kbd> to capture and analyze the screen.
+    Change shortcut in <a href="/settings">Settings</a>.
+</p>
 
-<div class="row g-3">
-    <!-- Screenshot Buttons -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header fw-semibold">Screenshot</div>
-            <div class="card-body d-grid gap-2">
-                <button class="btn btn-primary" id="btn-fullscreen">
-                    <i class="bi bi-aspect-ratio me-1"></i> Capture &amp; Analyze Screen
-                </button>
-                <button class="btn btn-outline-secondary" id="btn-region" disabled>
-                    <i class="bi bi-bounding-box me-1"></i> Region Screenshot (Soon)
-                </button>
-                <hr>
-                <small class="text-secondary">
-                    <strong>Shortcuts:</strong><br>
-                    <kbd>Ctrl+Shift+A</kbd> — Analyze screen
-                </small>
-            </div>
+<!-- Current Response -->
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Response</span>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-secondary" id="response-status">Idle</span>
+            <button class="btn btn-outline-secondary btn-sm" id="btn-toggle-view" style="display:none;">
+                Rendered / Raw
+            </button>
         </div>
     </div>
-
-    <!-- Prompt & Options -->
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header fw-semibold">Prompt &amp; Options</div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="manual-prompt" class="form-label">What would you like to know?</label>
-                    <textarea class="form-control" id="manual-prompt" rows="2"
-                        placeholder="e.g. 'What's on my screen?' or 'Explain this code'"></textarea>
-                </div>
-                <div class="row g-2 mb-3">
-                    <div class="col-md-4">
-                        <label for="vision-provider" class="form-label">Vision Provider</label>
-                        <select class="form-select" id="vision-provider">
-                            <option value="mock">Mock Vision</option>
-                            <option value="openai">OpenAI Compatible</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="prompt-template" class="form-label">Prompt Template</label>
-                        <select class="form-select" id="prompt-template">
-                            <option value="assistant">Assistant</option>
-                            <option value="programming">Programming</option>
-                            <option value="game">Game Assistant</option>
-                            <option value="study">Study</option>
-                            <option value="ocr">OCR</option>
-                            <option value="translator">Translator</option>
-                            <option value="custom">Custom</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="enable-tts" disabled>
-                            <label class="form-check-label text-secondary" for="enable-tts">
-                                <i class="bi bi-volume-up me-1"></i> TTS (Soon)
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <button class="btn btn-success btn-lg w-100" id="btn-send">
-                    <i class="bi bi-send me-1"></i> Send
-                </button>
-            </div>
-        </div>
+    <div class="card-body">
+        <div class="markdown-body" id="response-rendered" style="display:none;"></div>
+        <pre class="response-area mb-0" id="response-content">Press Ctrl+Shift+X to start. Results will appear here.</pre>
     </div>
+</div>
 
-    <!-- Processing Status -->
-    <div class="col-12">
-        <div class="card border-info" id="processing-card" style="display:none;">
-            <div class="card-body text-center py-3">
-                <div class="spinner-border text-info me-2" role="status"></div>
-                <span class="text-info" id="processing-text">Capturing and analyzing...</span>
-            </div>
-        </div>
+<!-- History -->
+<div class="card">
+    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+        <span>Screenshot History</span>
+        <small class="text-secondary" id="history-count">0 entries</small>
     </div>
-
-    <!-- Response Area -->
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="fw-semibold">Response</span>
-                <div class="d-flex gap-2 align-items-center">
-                    <span class="badge bg-secondary" id="response-status">Idle</span>
-                    <button class="btn btn-outline-secondary btn-sm" id="btn-toggle-view" style="display:none;">
-                        <i class="bi bi-markdown"></i> Raw / Rendered
-                    </button>
-                </div>
-            </div>
-            <div class="card-body">
-                <!-- Rendered Markdown -->
-                <div class="markdown-body" id="response-rendered" style="display:none;"></div>
-                <!-- Raw text -->
-                <pre class="response-area mb-0" id="response-content">Click "Capture &amp; Analyze Screen" or "Send" to see results.</pre>
-            </div>
-        </div>
+    <div class="card-body p-0" id="history-list">
+        <p class="text-secondary text-center py-3 mb-0">No screenshots yet.</p>
     </div>
 </div>
 {% endblock %}
