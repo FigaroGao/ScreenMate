@@ -29,7 +29,7 @@ class Config:
 
     # ---- App ----
     APP_NAME: str = os.getenv("APP_NAME", "ScreenMate")
-    APP_VERSION: str = os.getenv("APP_VERSION", "1.1.1")
+    APP_VERSION: str = os.getenv("APP_VERSION", "1.2.0")
     APP_ENV: str = os.getenv("APP_ENV", "development")
     APP_HOST: str = os.getenv("APP_HOST", "127.0.0.1")
     APP_PORT: int = int(os.getenv("APP_PORT", "5000"))

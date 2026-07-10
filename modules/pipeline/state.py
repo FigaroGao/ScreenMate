@@ -171,11 +171,10 @@ class PipelineState:
             # Add to history
             self._state.history.append({
                 "timestamp": time.strftime("%H:%M:%S"),
-                "content": (
-                    result.get("vision", {}).get("content", "") or
-                    result.get("message", "")
-                ),
-                "model": result.get("vision", {}).get("model", ""),
+                "vision_content": result.get("vision", {}).get("content", ""),
+                "persona_content": result.get("chat", {}).get("content", ""),
+                "vision_model": result.get("vision", {}).get("model", ""),
+                "persona_name": result.get("persona", ""),
                 "latency_ms": result.get("processing_time_ms", 0),
                 "source": self._state.source,
                 "prompt": result.get("prompt", {}).get("user_prompt", ""),

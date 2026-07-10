@@ -22,6 +22,7 @@ _settings_manager: Any = None
 _prompt_manager: Any = None
 _log_manager: Any = None
 _hotkey_manager: Any = None
+_persona_manager: Any = None
 
 
 # ======================================================================
@@ -41,6 +42,7 @@ def setup(
     prompt_manager: Any = None,
     log_manager: Any = None,
     hotkey_manager: Any = None,
+    persona_manager: Any = None,
 ) -> None:
     """Wire all singletons into the locator."""
     globals().update({
@@ -54,6 +56,7 @@ def setup(
         "_prompt_manager": prompt_manager or _prompt_manager,
         "_log_manager": log_manager or _log_manager,
         "_hotkey_manager": hotkey_manager or _hotkey_manager,
+        "_persona_manager": persona_manager or _persona_manager,
     })
 
 
@@ -100,3 +103,7 @@ def get_log_manager() -> Any:
 
 def get_hotkey_manager() -> Any:
     return _hotkey_manager
+
+
+def get_persona_manager() -> Any:
+    return _persona_manager

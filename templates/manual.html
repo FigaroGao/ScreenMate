@@ -10,23 +10,44 @@
 <h2 class="mb-3"><i class="bi bi-camera me-2"></i>Manual Mode</h2>
 <p class="text-secondary small mb-3">
     Press <kbd>Ctrl+Shift+X</kbd> to capture and analyze the screen.
-    Change shortcut in <a href="/settings">Settings</a>.
+    Change shortcut or persona in <a href="/settings">Settings</a>.
 </p>
 
-<!-- Current Response -->
+<!-- Persona Selector -->
+<div class="d-flex align-items-center gap-2 mb-3">
+    <label class="form-label mb-0 text-nowrap"><i class="bi bi-person-badge me-1"></i>Persona:</label>
+    <select class="form-select form-select-sm" id="persona-select" style="max-width:220px;">
+        <option value="">(Default — Vision only)</option>
+    </select>
+</div>
+
+<!-- Vision Response -->
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="fw-semibold">Response</span>
+        <span class="fw-semibold"><i class="bi bi-eye me-1"></i>Vision Response</span>
         <div class="d-flex gap-2 align-items-center">
-            <span class="badge bg-secondary" id="response-status">Idle</span>
-            <button class="btn btn-outline-secondary btn-sm" id="btn-toggle-view" style="display:none;">
-                Rendered / Raw
-            </button>
+            <span class="badge bg-info" id="vision-status">Idle</span>
+            <button class="btn btn-outline-secondary btn-sm" id="btn-toggle-vision" style="display:none;">Rendered</button>
         </div>
     </div>
     <div class="card-body">
-        <div class="markdown-body" id="response-rendered" style="display:none;"></div>
-        <pre class="response-area mb-0" id="response-content">Press Ctrl+Shift+X to start. Results will appear here.</pre>
+        <div class="markdown-body" id="vision-rendered" style="display:none;"></div>
+        <pre class="response-area mb-0" id="vision-content">Press Ctrl+Shift+X to start. Vision analysis will appear here.</pre>
+    </div>
+</div>
+
+<!-- Persona Response -->
+<div class="card mb-3" id="persona-response-card" style="display:none;">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-chat-dots me-1"></i>Persona Response</span>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-success" id="persona-status">Idle</span>
+            <button class="btn btn-outline-secondary btn-sm" id="btn-toggle-persona" style="display:none;">Rendered</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="markdown-body" id="persona-rendered" style="display:none;"></div>
+        <pre class="response-area mb-0" id="persona-content">Persona response will appear here.</pre>
     </div>
 </div>
 

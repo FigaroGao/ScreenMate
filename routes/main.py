@@ -133,6 +133,7 @@ def api_manual() -> Any:
         vision_provider=data.get("vision_provider", ""),
         enable_tts=data.get("enable_tts", False),
         tts_provider=data.get("tts_provider", ""),
+        persona_name=data.get("persona", ""),
     )
 
     return jsonify(result.to_dict())
@@ -540,4 +541,82 @@ def api_hotkey_change() -> Any:
     if hm is None:
         return jsonify({"success": False, "message": "HotkeyManager not available."})
     result = hm.change_shortcut(shortcut)
+    return jsonify(result)
+
+
+# ---------------------------------------------------------------------------
+# Page — Persona
+# ---------------------------------------------------------------------------
+
+
+@pages_bp.route("/persona")
+def persona_page() -> str:
+    """Render the Persona management page."""
+    return render_template("persona.html")
+
+
+# ---------------------------------------------------------------------------
+# API — Personas
+# ---------------------------------------------------------------------------
+
+
+@api_bp.route("/personas")
+def api_get_personas() -> Any:
+    """Return all personas."""
+    from modules.dependencies import get_persona_manager
+    pm = get_persona_manager()
+    if pm is None:
+        return jsonify({"success": False, "message": "PersonaManager not available."})
+    result = pm.list_all()
+    return jsonify({
+        "success": True,
+        "personas": [
+            {"name": p.name, "description": p.description,
+             "system_prompt": p.system_prompt, "is_default": p.is_default}
+            for p in result.personas
+        ],
+    })
+
+
+@api_bp.route("/personas/create", methods=["POST"])
+def api_create_persona() -> Any:
+    """Create a new persona."""
+    from modules.dependencies import get_persona_manager
+    data: dict = request.get_json(silent=True) or {}
+    pm = get_persona_manager()
+    if pm is None:
+        return jsonify({"success": False, "message": "PersonaManager not available."})
+    result = pm.create(
+        name=data.get("name", ""),
+        description=data.get("description", ""),
+        system_prompt=data.get("system_prompt", ""),
+    )
+    return jsonify(result)
+
+
+@api_bp.route("/personas/update", methods=["POST"])
+def api_update_persona() -> Any:
+    """Update an existing persona."""
+    from modules.dependencies import get_persona_manager
+    data: dict = request.get_json(silent=True) or {}
+    pm = get_persona_manager()
+    if pm is None:
+        return jsonify({"success": False, "message": "PersonaManager not available."})
+    result = pm.update(
+        name=data.get("name", ""),
+        description=data.get("description"),
+        system_prompt=data.get("system_prompt"),
+    )
+    return jsonify(result)
+
+
+@api_bp.route("/personas/delete", methods=["POST"])
+def api_delete_persona() -> Any:
+    """Delete a persona."""
+    from modules.dependencies import get_persona_manager
+    data: dict = request.get_json(silent=True) or {}
+    pm = get_persona_manager()
+    if pm is None:
+        return jsonify({"success": False, "message": "PersonaManager not available."})
+    result = pm.delete(name=data.get("name", ""))
     return jsonify(result)

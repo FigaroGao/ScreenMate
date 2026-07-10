@@ -52,7 +52,12 @@ auto_monitor = AutoMonitor()
 stats_collector = StatsCollector.instance()
 settings_manager = SettingsManager()
 prompt_manager = PromptManager()
+persona_manager = None   # lazy init below
 log_manager = LogManager.instance()
+
+# Lazy init PersonaManager to avoid circular imports
+from modules.persona.manager import PersonaManager  # noqa: E402
+persona_manager = PersonaManager()
 
 # Apply saved settings overrides
 settings_manager.refresh_config()
@@ -103,6 +108,7 @@ deps.setup(
     stats_collector=stats_collector,
     settings_manager=settings_manager,
     prompt_manager=prompt_manager,
+    persona_manager=persona_manager,
     log_manager=log_manager,
     hotkey_manager=hotkey_manager,
 )

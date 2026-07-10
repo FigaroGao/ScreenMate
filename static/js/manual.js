@@ -1,68 +1,75 @@
 /**
- * ScreenMate Manual Mode — displays pipeline results + screenshot history.
- * Polls /api/pipeline/status for live updates.
+ * ScreenMate Manual Mode — vision + persona responses + history.
  */
-
 (function () {
     'use strict';
-
     var api = window.ScreenMate.api;
     var escapeHtml = window.ScreenMate.escapeHtml;
 
-    var responseContent = document.getElementById('response-content');
-    var responseRendered = document.getElementById('response-rendered');
-    var responseStatus = document.getElementById('response-status');
-    var btnToggleView = document.getElementById('btn-toggle-view');
+    var personaSelect = document.getElementById('persona-select');
+    var personaCard = document.getElementById('persona-response-card');
+    var visionContent = document.getElementById('vision-content');
+    var visionRendered = document.getElementById('vision-rendered');
+    var visionStatus = document.getElementById('vision-status');
+    var personaContent = document.getElementById('persona-content');
+    var personaRendered = document.getElementById('persona-rendered');
+    var personaStatus = document.getElementById('persona-status');
+    var btnVisionToggle = document.getElementById('btn-toggle-vision');
+    var btnPersonaToggle = document.getElementById('btn-toggle-persona');
     var historyList = document.getElementById('history-list');
     var historyCount = document.getElementById('history-count');
 
-    // --- markdown-it ---
     var md = null;
     if (typeof markdownit !== 'undefined') {
-        md = markdownit({
-            html: false, linkify: true, typographer: true, breaks: true,
-            highlight: function (str, lang) {
-                if (lang && window.hljs && window.hljs.getLanguage(lang)) {
-                    try {
-                        return '<pre class="hljs"><code>' +
-                            window.hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
-                            '</code></pre>';
-                    } catch (_) {}
+        md = markdownit({ html: false, linkify: true, typographer: true, breaks: true,
+            highlight: function (s, l) {
+                if (l && window.hljs && window.hljs.getLanguage(l)) {
+                    try { return '<pre class="hljs"><code>' + window.hljs.highlight(s, { language: l, ignoreIllegals: true }).value + '</code></pre>'; } catch (_) {}
                 }
-                return '<pre class="hljs"><code>' + escapeHtml(str) + '</code></pre>';
+                return '<pre class="hljs"><code>' + escapeHtml(s) + '</code></pre>';
             },
         });
     }
 
-    var showRendered = false;
-
-    // --- Toggle raw/rendered ---
-    if (btnToggleView) {
-        btnToggleView.addEventListener('click', function () {
-            showRendered = !showRendered;
-            responseContent.style.display = showRendered ? 'none' : 'block';
-            responseRendered.style.display = showRendered ? 'block' : 'none';
-            btnToggleView.textContent = showRendered ? 'Raw' : 'Rendered';
+    // Load persona list into dropdown
+    function loadPersonas() {
+        api.get('/api/personas').then(function (data) {
+            if (!data.success || !data.personas) return;
+            data.personas.forEach(function (p) {
+                var opt = document.createElement('option');
+                opt.value = p.name;
+                opt.textContent = p.name;
+                personaSelect.appendChild(opt);
+            });
         });
     }
+    loadPersonas();
 
-    // --- Render markdown into response area ---
-    function renderResponse(text, model, latency) {
-        responseContent.textContent = text || '(empty)';
-        responseStatus.textContent = (model || '') + ' (' + (latency || '?') + 'ms)';
-        responseStatus.className = 'badge bg-success';
+    // Toggle raw/rendered
+    function setupToggle(btn, contentEl, renderedEl) {
+        if (!btn) return;
+        var showRaw = true;
+        btn.addEventListener('click', function () {
+            showRaw = !showRaw;
+            contentEl.style.display = showRaw ? 'block' : 'none';
+            renderedEl.style.display = showRaw ? 'none' : 'block';
+            btn.textContent = showRaw ? 'Rendered' : 'Raw';
+        });
+        btn.style.display = 'inline-block';
+    }
+    setupToggle(btnVisionToggle, visionContent, visionRendered);
+    setupToggle(btnPersonaToggle, personaContent, personaRendered);
+
+    function renderMarkdown(el, text) {
+        el.textContent = text || '';
         if (md) {
-            responseRendered.innerHTML = md.render(text || '');
-            btnToggleView.style.display = 'inline-block';
+            var rid = el.id + '-rendered';
+            var r = document.getElementById(rid);
+            if (r) r.innerHTML = md.render(text || '');
         }
-        // Default to raw view
-        showRendered = false;
-        responseContent.style.display = 'block';
-        responseRendered.style.display = 'none';
-        if (btnToggleView) btnToggleView.textContent = 'Rendered';
     }
 
-    // --- Build history list ---
+    // History render (supports vision + persona dual content)
     function renderHistory(history) {
         if (!history || !history.length) {
             historyList.innerHTML = '<p class="text-secondary text-center py-3 mb-0">No screenshots yet.</p>';
@@ -70,34 +77,36 @@
             return;
         }
         if (historyCount) historyCount.textContent = history.length + ' entries';
-
-        // Show newest first
         var items = history.slice().reverse();
-        var html = '';
-        items.forEach(function (item, idx) {
+        var html = items.map(function (item, idx) {
             var id = 'hist-' + idx;
-            var firstLine = (item.content || '').split('\n')[0].substring(0, 100);
-            if ((item.content || '').length > 100) firstLine += '...';
-            html += (
-                '<div class="history-item border-bottom border-secondary">' +
-                '  <div class="history-header px-3 py-2 d-flex align-items-center gap-2" ' +
-                '       style="cursor:pointer;" onclick="document.getElementById(\'' + id + '\').classList.toggle(\'d-none\')">' +
-                '    <i class="bi bi-chevron-right small text-secondary history-chevron"></i>' +
-                '    <span class="text-secondary small">' + escapeHtml(item.timestamp) + '</span>' +
-                '    <span class="badge bg-secondary">' + escapeHtml(item.source) + '</span>' +
-                '    <span class="text-truncate small" style="flex:1;">' + escapeHtml(firstLine) + '</span>' +
-                '    <span class="text-secondary small text-nowrap">' + escapeHtml(item.model) + ' ' + (item.latency_ms || 0) + 'ms</span>' +
-                '  </div>' +
-                '  <div id="' + id + '" class="history-body px-3 pb-2 d-none">' +
-                '    <div class="markdown-body small">' + (md ? md.render(item.content || '') : '<pre>' + escapeHtml(item.content || '') + '</pre>') + '</div>' +
-                '  </div>' +
-                '</div>'
-            );
-        });
+            var firstLine = (item.vision_content || item.content || '').split('\n')[0].substring(0, 80);
+            if ((item.vision_content || item.content || '').length > 80) firstLine += '...';
+            var personaLabel = item.persona_name ? ' | ' + escapeHtml(item.persona_name) : '';
+            var vBody = md ? md.render(item.vision_content || item.content || '') : '<pre>' + escapeHtml(item.vision_content || item.content || '') + '</pre>';
+            var pHtml = '';
+            if (item.persona_content) {
+                var pBody = md ? md.render(item.persona_content) : '<pre>' + escapeHtml(item.persona_content) + '</pre>';
+                pHtml = '<hr class="border-secondary my-2"><div class="small text-info fw-semibold mb-1">Persona Response</div><div class="markdown-body small">' + pBody + '</div>';
+            }
+            return '<div class="history-item border-bottom border-secondary">' +
+                '<div class="history-header px-3 py-2 d-flex align-items-center gap-2" style="cursor:pointer;" onclick="var b=this.nextElementSibling;b.classList.toggle(\'d-none\')">' +
+                '<i class="bi bi-chevron-right small text-secondary history-chevron"></i>' +
+                '<span class="text-secondary small">' + escapeHtml(item.timestamp) + '</span>' +
+                '<span class="badge bg-secondary">' + escapeHtml(item.source) + '</span>' +
+                '<span class="text-truncate small">' + escapeHtml(firstLine) + '</span>' +
+                '<span class="text-secondary small text-nowrap ms-auto">' + escapeHtml(item.vision_model || '') + personaLabel + ' ' + (item.latency_ms || '') + 'ms</span>' +
+                '</div>' +
+                '<div id="' + id + '" class="history-body px-3 pb-2 d-none">' +
+                '<div class="small text-info fw-semibold mb-1">Vision</div>' +
+                '<div class="markdown-body small">' + vBody + '</div>' +
+                pHtml +
+                '</div></div>';
+        }).join('');
         historyList.innerHTML = html;
     }
 
-    // --- Poll pipeline status ---
+    // Poll pipeline status
     var lastRunCount = -1;
     var lastHistoryLen = 0;
 
@@ -105,32 +114,40 @@
         try {
             var data = await api.get('/api/pipeline/status');
             if (!data.success || !data.pipeline) return;
-
             var p = data.pipeline;
 
-            // New result arrived?
             if (p.pipeline_runs !== lastRunCount && p.last_result) {
                 var r = p.last_result;
                 var vis = r.vision || {};
-                renderResponse(vis.content || r.message || '', vis.model || '', r.processing_time_ms || 0);
+                renderMarkdown(visionContent, vis.content || r.message || '');
+                visionStatus.textContent = (vis.model || '') + ' (' + (r.processing_time_ms || '?') + 'ms)';
+                visionStatus.className = 'badge bg-info';
+
+                var chat = r.chat || {};
+                if (chat.content) {
+                    personaCard.style.display = 'block';
+                    renderMarkdown(personaContent, chat.content);
+                    personaStatus.textContent = (chat.model || '') + ' (' + (chat.latency_ms || '?') + 'ms)';
+                    personaStatus.className = 'badge bg-success';
+                } else if (r.persona) {
+                    personaCard.style.display = 'block';
+                    personaContent.textContent = '(Chat provider returned no content)';
+                }
                 lastRunCount = p.pipeline_runs;
             }
 
-            // History changed?
+            if (p.running) {
+                visionStatus.textContent = p.progress === 'capturing' ? 'Capturing...' : 'Analyzing...';
+                visionStatus.className = 'badge bg-warning';
+            }
+
             if (p.history && p.history.length !== lastHistoryLen) {
                 renderHistory(p.history);
                 lastHistoryLen = p.history.length;
             }
-
-            // Show progress
-            if (p.running) {
-                responseStatus.textContent = p.progress === 'capturing' ? 'Capturing...' : 'Analyzing...';
-                responseStatus.className = 'badge bg-info';
-            }
         } catch (_) {}
     }
 
-    // --- Init ---
     poll();
     setInterval(poll, 800);
 })();
