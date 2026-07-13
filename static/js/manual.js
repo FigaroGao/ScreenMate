@@ -125,13 +125,15 @@
 
                 var chat = r.chat || {};
                 if (chat.content) {
-                    personaCard.style.display = 'block';
                     renderMarkdown(personaContent, chat.content);
                     personaStatus.textContent = (chat.model || '') + ' (' + (chat.latency_ms || '?') + 'ms)';
                     personaStatus.className = 'badge bg-success';
                 } else if (r.persona) {
-                    personaCard.style.display = 'block';
                     personaContent.textContent = '(Chat provider returned no content)';
+                    personaStatus.textContent = 'No response';
+                    personaStatus.className = 'badge bg-secondary';
+                } else {
+                    personaContent.textContent = 'Select a Persona above to enable styled responses.';
                 }
                 lastRunCount = p.pipeline_runs;
             }
