@@ -45,10 +45,19 @@
         });
     }
     loadPersonas();
+    // Restore saved persona after options are loaded
+    setTimeout(restorePersona, 300);
 
-    // Update persona hint when selection changes
+    // Update persona hint + persist when selection changes
     personaSelect.addEventListener('change', function () {
         var name = personaSelect.value;
+        // Persist: localStorage + server
+        try { localStorage.setItem('screenmate_persona', name); } catch (_) {}
+        api.post('/api/pipeline/persona', { persona: name });
+        updatePersonaHint(name);
+    });
+
+    function updatePersonaHint(name) {
         if (name) {
             personaContent.textContent = 'Persona "' + name + '" selected. Press Ctrl+Shift+X to capture and analyze.';
             personaStatus.textContent = 'Ready';
@@ -58,7 +67,27 @@
             personaStatus.textContent = 'No persona';
             personaStatus.className = 'badge bg-secondary';
         }
-    });
+    }
+
+    // Restore saved persona on load
+    function restorePersona() {
+        var saved = null;
+        try { saved = localStorage.getItem('screenmate_persona'); } catch (_) {}
+        if (saved && personaSelect.querySelector('option[value="' + saved + '"]')) {
+            personaSelect.value = saved;
+        }
+        // Also check server state
+        api.get('/api/pipeline/status').then(function (data) {
+            if (data.success && data.pipeline.current_persona) {
+                var p = data.pipeline.current_persona;
+                if (personaSelect.querySelector('option[value="' + p + '"]')) {
+                    personaSelect.value = p;
+                    try { localStorage.setItem('screenmate_persona', p); } catch (_) {}
+                }
+            }
+            updatePersonaHint(personaSelect.value);
+        });
+    }
 
     // Toggle raw/rendered
     function setupToggle(btn, contentEl, renderedEl) {

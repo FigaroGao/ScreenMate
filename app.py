@@ -73,6 +73,7 @@ stats_collector.bind_log_counter(lambda: _logger_mgr.log_count)
 # Import pipelines (depends on singletons above)
 # ---------------------------------------------------------------------------
 from modules.pipeline.manual_pipeline import ManualPipeline  # noqa: E402
+from modules.pipeline.state import PipelineState              # noqa: E402
 from modules.pipeline.auto_pipeline import AutoPipeline      # noqa: E402
 
 manual_pipeline = ManualPipeline(context_manager, screenshot_capture, stats_collector)
@@ -87,6 +88,7 @@ hotkey_manager = HotkeyManager(
     on_trigger=lambda: manual_pipeline.execute(
         prompt="",
         template_id=Config.PROMPT_TEMPLATE,
+        persona_name=PipelineState.instance().get_current_persona(),
     ),
     on_get_settings_manager=lambda: settings_manager,
 )

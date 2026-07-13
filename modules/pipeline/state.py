@@ -34,6 +34,7 @@ class _State:
     last_completed_at: float = 0.0
     pipeline_runs: int = 0
     history: list = field(default_factory=list)
+    current_persona: str = ""
 
 
 class PipelineState:
@@ -227,7 +228,18 @@ class PipelineState:
                 ),
                 "pipeline_runs": s.pipeline_runs,
                 "history": list(s.history),
+                "current_persona": s.current_persona,
             }
+
+    def set_current_persona(self, name: str) -> None:
+        """Set the active persona (persists across runs)."""
+        with self._lock:
+            self._state.current_persona = name
+
+    def get_current_persona(self) -> str:
+        """Get the active persona name."""
+        with self._lock:
+            return self._state.current_persona
 
     def is_busy(self) -> bool:
         """Return ``True`` if a pipeline is currently executing."""

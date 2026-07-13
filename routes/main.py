@@ -545,6 +545,21 @@ def api_hotkey_change() -> Any:
 
 
 # ---------------------------------------------------------------------------
+# API — Pipeline: set current persona
+# ---------------------------------------------------------------------------
+
+
+@api_bp.route("/pipeline/persona", methods=["POST"])
+def api_set_persona() -> Any:
+    """Set the active persona for pipeline runs."""
+    from modules.pipeline.state import PipelineState
+    data: dict = request.get_json(silent=True) or {}
+    name: str = data.get("persona", "")
+    PipelineState.instance().set_current_persona(name)
+    return jsonify({"success": True, "persona": name})
+
+
+# ---------------------------------------------------------------------------
 # Page — Persona
 # ---------------------------------------------------------------------------
 
