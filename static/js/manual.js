@@ -35,6 +35,7 @@
     function loadPersonas() {
         api.get('/api/personas').then(function (data) {
             if (!data.success || !data.personas) return;
+            personaSelect.innerHTML = '<option value="">(Default — Vision only)</option>';
             data.personas.forEach(function (p) {
                 var opt = document.createElement('option');
                 opt.value = p.name;
@@ -44,6 +45,20 @@
         });
     }
     loadPersonas();
+
+    // Update persona hint when selection changes
+    personaSelect.addEventListener('change', function () {
+        var name = personaSelect.value;
+        if (name) {
+            personaContent.textContent = 'Persona "' + name + '" selected. Press Ctrl+Shift+X to capture and analyze.';
+            personaStatus.textContent = 'Ready';
+            personaStatus.className = 'badge bg-secondary';
+        } else {
+            personaContent.textContent = 'Select a Persona above to enable styled responses.';
+            personaStatus.textContent = 'No persona';
+            personaStatus.className = 'badge bg-secondary';
+        }
+    });
 
     // Toggle raw/rendered
     function setupToggle(btn, contentEl, renderedEl) {
@@ -146,6 +161,13 @@
             if (p.history && p.history.length !== lastHistoryLen) {
                 renderHistory(p.history);
                 lastHistoryLen = p.history.length;
+                // Update persona hint based on latest history
+                var last = p.history[p.history.length - 1];
+                if (last && last.persona_name && personaSelect.value) {
+                    // Don't overwrite if we already have real content
+                } else if (personaSelect.value) {
+                    personaContent.textContent = 'Persona "' + personaSelect.value + '" selected. Press Ctrl+Shift+X to capture and analyze.';
+                }
             }
         } catch (_) {}
     }
