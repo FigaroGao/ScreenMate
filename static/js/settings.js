@@ -104,6 +104,33 @@
     }
 
     // ==================================================================
+    // 3b. Per-section Save buttons
+    // ==================================================================
+    document.querySelectorAll('.btn-section-save').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+            var section = btn.dataset.section;
+            var card = btn.closest('.card');
+            if (!card) return;
+            var fields = card.querySelectorAll('[name]');
+            var payload = {};
+            fields.forEach(function (el) {
+                if (el.value && el.value !== '***') {
+                    payload[el.getAttribute('name')] = el.value;
+                }
+            });
+            btnLoading(btn, 'Saving...');
+            try {
+                var data = await api.post('/api/settings', payload);
+                toast(data.message || 'Saved.', data.success ? 'success' : 'danger');
+            } catch (err) {
+                toast(err.message, 'danger');
+            } finally {
+                btnRestore(btn);
+            }
+        });
+    });
+
+    // ==================================================================
     // 4. Restore Defaults
     // ==================================================================
     if (btnReset) {

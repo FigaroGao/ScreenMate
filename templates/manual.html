@@ -21,6 +21,21 @@
     </select>
 </div>
 
+<!-- Persona/Chat Response (above Vision) -->
+<div class="card mb-3" id="persona-response-card" style="display:none;">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-chat-dots me-1"></i>Persona Response</span>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-success" id="persona-status">Idle</span>
+            <button class="btn btn-outline-secondary btn-sm" id="btn-toggle-persona" style="display:none;">Rendered</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="markdown-body" id="persona-rendered" style="display:none;"></div>
+        <pre class="response-area mb-0" id="persona-content">Persona response will appear here.</pre>
+    </div>
+</div>
+
 <!-- Vision Response -->
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -33,21 +48,6 @@
     <div class="card-body">
         <div class="markdown-body" id="vision-rendered" style="display:none;"></div>
         <pre class="response-area mb-0" id="vision-content">Press Ctrl+Shift+X to start. Vision analysis will appear here.</pre>
-    </div>
-</div>
-
-<!-- Persona Response -->
-<div class="card mb-3" id="persona-response-card" style="display:none;">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span class="fw-semibold"><i class="bi bi-chat-dots me-1"></i>Persona Response</span>
-        <div class="d-flex gap-2 align-items-center">
-            <span class="badge bg-success" id="persona-status">Idle</span>
-            <button class="btn btn-outline-secondary btn-sm" id="btn-toggle-persona" style="display:none;">Rendered</button>
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="markdown-body" id="persona-rendered" style="display:none;"></div>
-        <pre class="response-area mb-0" id="persona-content">Persona response will appear here.</pre>
     </div>
 </div>
 
