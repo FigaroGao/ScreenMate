@@ -60,11 +60,10 @@ class MockChatProvider(BaseChatProvider):
             provider=self.provider_name,
             model=self.model_name,
             content=(
-                f"\U0001f4ac [Mock Chat] This is a simulated response.\n\n"
+                f"[Mock Chat] This is a simulated response.\n\n"
                 f"You said: \"{last_user_msg[:100]}\"\n\n"
-                f"As a mock chat provider, I always respond helpfully "
-                f"but without any real AI behind me.  Replace me with "
-                f"OpenAI, Claude, or your favourite LLM."
+                f"To get real AI responses, go to Settings and configure "
+                f"the Chat Provider (API key, Base URL, Model)."
             ),
             latency_ms=round(latency_ms, 2),
             usage={"prompt_tokens": 80, "completion_tokens": 55},
