@@ -67,7 +67,14 @@
         </div>
         <div class="card-body">
             <div class="row g-2">
-                <div class="col-md-6">
+                <div class="col-md-3">
+                    <label class="form-label" for="chat-provider-select">Provider</label>
+                    <select class="form-select" id="chat-provider-select" name="CHAT_PROVIDER">
+                        <option value="mock">Mock</option>
+                        <option value="openai">OpenAI Compatible</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
                     <label class="form-label" for="chat-api-key">API Key</label>
                     <input type="password" class="form-control" id="chat-api-key"
                         name="CHAT_API_KEY" placeholder="sk-...">
