@@ -9,8 +9,9 @@ import time
 from typing import Any, Optional
 
 from openai import (
-    APIError, APITimeoutError, AuthenticationError,
-    BadRequestError, OpenAI, PermissionDeniedError, RateLimitError,
+    APIConnectionError, APIError, APITimeoutError,
+    AuthenticationError, BadRequestError, OpenAI,
+    PermissionDeniedError, RateLimitError,
 )
 
 from config.settings import Config
@@ -70,8 +71,9 @@ class OpenAIChatProvider(BaseChatProvider):
         full_messages.extend(messages)
 
         logger.info(
-            "OpenAIChat: calling %s (model=%s, messages=%d)",
-            self._base_url, self._model, len(full_messages),
+            "OpenAIChat: calling %s (model=%s, key=%s..., messages=%d)",
+            self._base_url, self._model, self._api_key[:8] if self._api_key else "(empty)",
+            len(full_messages),
         )
 
         try:
@@ -107,6 +109,17 @@ class OpenAIChatProvider(BaseChatProvider):
                 usage=usage,
             )
 
+        except APIConnectionError as exc:
+            latency_ms = (time.perf_counter() - t_start) * 1000
+            logger.error("OpenAIChat: connection failed — %s", self._base_url)
+            return ProviderResponse.fail(
+                provider=self.provider_name,
+                error=(
+                    f"Connection failed. Cannot reach {self._base_url}. "
+                    f"Check your network and Base URL. ({exc})"
+                ),
+                latency_ms=round(latency_ms, 2),
+            )
         except AuthenticationError:
             return ProviderResponse.fail(
                 provider=self.provider_name,
