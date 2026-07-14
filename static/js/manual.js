@@ -173,9 +173,15 @@
                     personaStatus.textContent = (chat.model || '') + ' (' + (chat.latency_ms || '?') + 'ms)';
                     personaStatus.className = 'badge bg-success';
                 } else if (r.persona) {
-                    personaContent.textContent = '(Chat provider returned no content)';
-                    personaStatus.textContent = 'No response';
-                    personaStatus.className = 'badge bg-secondary';
+                    if (chat.error) {
+                        personaContent.textContent = 'Chat API error: ' + chat.error;
+                        personaStatus.textContent = 'Error';
+                        personaStatus.className = 'badge bg-danger';
+                    } else {
+                        personaContent.textContent = '(Chat provider returned no content)';
+                        personaStatus.textContent = 'No response';
+                        personaStatus.className = 'badge bg-secondary';
+                    }
                 } else {
                     personaContent.textContent = 'Select a Persona above to enable styled responses.';
                 }

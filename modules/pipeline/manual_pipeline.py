@@ -155,6 +155,8 @@ class ManualPipeline:
                     }],
                     system_prompt=persona_prompt,
                 )
+                if not chat_response.success:
+                    logger.warning("Chat API returned error: %s", chat_response.error)
                 self._stats.record_call(
                     provider_type="chat", provider_name=chat_response.provider,
                     model=chat_response.model, latency_ms=chat_response.latency_ms,
