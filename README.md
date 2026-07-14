@@ -1,158 +1,141 @@
 # ScreenMate
 
-A desktop AI assistant with vision understanding, global hotkey capture,
-multi-model switching, and screenshot history.
+A desktop AI assistant with vision understanding, persona-styled chat,
+global hotkey capture, and screenshot history.
 
-**Current version: v1.1.1**
+**Current version: v1.2.1**
 
 ## Features
 
-- **Global Hotkey** — Press `Ctrl+Shift+X` to capture and analyze your screen from any application
-- **Vision Analysis** — OpenAI-compatible vision API (supports OpenAI, OpenRouter, SiliconFlow, Qwen, etc.)
-- **Screenshot History** — Up to 50 past analyses saved locally, persist across restarts
+- **Global Hotkey** — `Ctrl+Shift+X` captures and analyzes your screen from any app
+- **Vision Analysis** — OpenAI-compatible vision API (OpenAI, DeepSeek, Qwen, OpenRouter, SiliconFlow, Ollama, etc.)
+- **Persona Layer** — Create and switch between AI personas (Assistant, Developer, Teacher, Senpai)
+- **Chat API** — Persona-styled responses powered by your own Chat API (separate from Vision)
+- **Screenshot History** — 50 past analyses saved locally, persist across restarts
 - **Windows Toast Notifications** — Native desktop alerts even when browser is minimized
 - **Prompt Templates** — Assistant, Programming, Game, OCR, Translator, Study, Custom
-- **Settings Persistence** — API keys and preferences saved to `config/settings.json`
+- **Settings Persistence** — Per-section save, API keys and preferences to `config/settings.json`
 - **Markdown Rendering** — Code blocks, tables, lists with syntax highlighting
 
 ## Quick Start
 
 ```bash
-# 1. Create virtual environment
 python -m venv ../venvs/screenmate
-
-# 2. Activate
 ../venvs/screenmate/Scripts/activate   # Windows
-# source ../venvs/screenmate/bin/activate  # Linux/Mac
-
-# 3. Install
 pip install -r requirements.txt
-
-# 4. Run
 python app.py
 ```
 
-Open http://127.0.0.1:5000 in your browser.
+Open http://127.0.0.1:5000
 
-## Configure Vision API
+## Configure APIs
 
-Go to **Settings** page, fill in:
+**Vision** — Settings → Vision Provider → OpenAI Compatible → fill API Key / Base URL / Model → Save → Test Vision
 
-| Field | Example |
-|-------|---------|
-| Provider | OpenAI Compatible |
-| API Key | `sk-your-key` |
-| Base URL | `https://api.openai.com/v1` |
-| Model | `gpt-4o` |
+**Chat (Persona)** — Settings → Chat Provider → OpenAI Compatible → fill API Key / Base URL / Model → Save → Test Chat
 
-Click **Save Settings**, then **Test Connection** to verify.
-
-Other compatible endpoints:
-- OpenRouter: `https://openrouter.ai/api/v1`
-- SiliconFlow: `https://api.siliconflow.cn/v1`
-- Ollama (local): `http://localhost:11434/v1`
+| Provider | Example Base URL |
+|----------|-----------------|
+| OpenAI | `https://api.openai.com/v1` |
+| DeepSeek | `https://api.deepseek.com` |
+| OpenRouter | `https://openrouter.ai/api/v1` |
+| SiliconFlow | `https://api.siliconflow.cn/v1` |
+| Aliyun Bailian | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
 
 ## Usage
 
-1. Configure your vision API in Settings
-2. Press `Ctrl+Shift+X` anywhere to capture and analyze your screen
-3. Results appear in the Manual Mode page with rendered Markdown
-4. Past analyses are saved in the history section below
-5. Change the shortcut in Settings → Capture Shortcut → Record
-
-## Project Structure
-
-```
-screenmate/
-├── app.py                         # Entry point
-├── config/
-│   ├── settings.py                # Config class (reads .env + settings.json)
-│   └── settings.json              # User overrides (git-ignored)
-├── providers/
-│   ├── __init__.py                # Provider registry + factory methods
-│   ├── response.py                # Unified ProviderResponse
-│   ├── base/                      # Abstract providers (vision, chat, tts)
-│   ├── vision/                    # Vision providers (mock, openai)
-│   ├── chat/                      # Chat providers (mock)
-│   └── tts/                       # TTS providers (mock)
-├── modules/
-│   ├── pipeline/                  # Pipeline layer (manual, auto)
-│   │   ├── manual_pipeline.py     # Screenshot → Vision → Context → Stats
-│   │   ├── pipeline_result.py     # Unified PipelineResult
-│   │   └── state.py               # Shared PipelineState (history, progress)
-│   ├── hotkey/                    # Global hotkey listener
-│   ├── notifications/             # Windows toast notifications
-│   ├── screenshot/                # Screenshot capture (mss + PIL)
-│   ├── context/                   # Context/memory management
-│   ├── logger/                    # Unified logging
-│   ├── telemetry/                 # Stats collector for Dashboard
-│   ├── prompts/                   # Prompt template manager
-│   ├── settings/                  # Settings persistence
-│   └── events/                    # Event bus (placeholder)
-├── routes/
-│   └── main.py                    # Page routes + REST API
-├── templates/                     # Jinja2 templates (Bootstrap 5)
-├── static/                        # CSS / JS (Vanilla JS + markdown-it)
-├── data/
-│   ├── logs/                      # Application logs
-│   ├── prompts/                   # Prompt template files (.md)
-│   └── history.json               # Screenshot history (50 entries max)
-├── tests/                         # pytest (85 tests)
-├── requirements.txt
-└── README.md
-```
+1. Configure Vision + Chat API in Settings (use Test buttons to verify)
+2. Go to **Persona** → create or select a persona
+3. Go to **Manual Mode** → choose a Persona from the dropdown
+4. Press `Ctrl+Shift+X` anywhere to capture and analyze
+5. **Persona Response** (Chat API) appears above **Vision Response** (raw analysis)
+6. Past analyses in History section, click to expand
 
 ## Architecture
 
 ```
-Browser (UI)  ←──→  Flask Routes  →  Pipeline  →  Providers (Vision/Chat/TTS)
-                                       ↓
-Keyboard  →  HotkeyManager  ──────────┘
-                                       ↓
-                              PipelineState (shared: progress, history)
-                                       ↓
-                              Notifications (Windows Toast)
+Screenshot → Vision API → Vision Response (raw)
+                ↓
+         Persona Layer (persona prompt + vision result)
+                ↓
+           Chat API → Persona Response (styled)
+                ↓
+              Web UI (dual display + history)
 ```
 
-- **Provider Pattern** — New AI models: drop a class in `providers/<type>/`
-- **Pipeline Layer** — All business logic in pipelines; routes and hotkeys are thin input adapters
-- **PipelineState** — Shared state for all input sources (button, hotkey, future auto)
-- **Mock-first** — All providers start as mocks; swap in real ones via settings
+```
+Keyboard → HotkeyManager → Pipeline → Providers (Vision / Chat / TTS)
+                                        ↓
+                                 PipelineState (shared: progress, history, persona)
+                                        ↓
+                              Windows Toast Notifications
+```
 
 ## REST API
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/status` | System status + live stats |
-| POST | `/api/manual` | Manual mode: screenshot → vision → response |
-| POST | `/api/auto/start` | Start auto-mode (stub) |
-| POST | `/api/auto/stop` | Stop auto-mode (stub) |
+| POST | `/api/manual` | Manual mode: screenshot → vision → persona → chat |
 | GET | `/api/settings` | Get settings (keys masked) |
 | POST | `/api/settings` | Save settings (persisted) |
 | POST | `/api/settings/reset` | Reset to defaults |
-| POST | `/api/provider/test` | Test connection (real API call) |
-| GET | `/api/logs` | Get recent log entries |
+| POST | `/api/provider/test` | Test Vision or Chat connection |
+| GET | `/api/logs` | Recent log entries |
 | POST | `/api/logs/clear` | Clear logs |
-| GET | `/api/logs/api-calls` | Structured API call records |
 | GET | `/api/context` | Context state + memory |
-| POST | `/api/context/clear` | Clear context |
-| GET | `/api/prompts` | List prompt templates |
-| GET | `/api/pipeline/status` | Pipeline state (progress, history) |
-| GET | `/api/hotkey/status` | Hotkey configuration |
-| POST | `/api/hotkey/change` | Change hotkey shortcut |
-| POST | `/api/hotkey/start` | Enable hotkey |
-| POST | `/api/hotkey/stop` | Disable hotkey |
+| GET | `/api/prompts` | Prompt templates |
+| GET | `/api/personas` | Personas list |
+| POST | `/api/personas/create` | Create persona |
+| POST | `/api/personas/update` | Update persona |
+| POST | `/api/personas/delete` | Delete persona |
+| GET | `/api/pipeline/status` | Pipeline state (progress, history, persona) |
+| POST | `/api/pipeline/persona` | Set active persona |
+| GET | `/api/hotkey/status` | Hotkey config |
+| POST | `/api/hotkey/change` | Change shortcut |
+
+## Project Structure
+
+```
+screenmate/
+├── app.py                     # Entry point
+├── config/                    # Settings (.env + settings.json)
+├── providers/                 # AI providers (Vision / Chat / TTS)
+│   ├── base/                  # Abstract base classes
+│   ├── vision/                # Mock + OpenAI-compatible
+│   ├── chat/                  # Mock + OpenAI-compatible
+│   └── tts/                   # Mock
+├── modules/
+│   ├── pipeline/              # ManualPipeline, AutoPipeline, PipelineState
+│   ├── persona/               # PersonaManager (CRUD + persistence)
+│   ├── hotkey/                # Global hotkey listener
+│   ├── notifications/         # Windows toast
+│   ├── screenshot/            # mss + PIL capture
+│   ├── context/               # Session / Memory / Summary
+│   ├── logger/                # Unified logging + LogManager
+│   ├── telemetry/             # StatsCollector for Dashboard
+│   ├── prompts/               # PromptManager
+│   ├── settings/              # Settings persistence
+│   └── events/                # Event bus (placeholder)
+├── routes/                    # Flask blueprints
+├── templates/                 # Jinja2 (Bootstrap 5)
+├── static/                    # CSS / JS (Vanilla + markdown-it)
+├── data/                      # Runtime: logs, history.json, personas.json, prompts/
+├── tests/                     # pytest (85 tests)
+└── requirements.txt
+```
 
 ## Roadmap
 
 | Version | Milestone |
 |---------|-----------|
 | v1.0.0 | MVP: real screenshot (mss), OpenAI vision, Markdown, Settings, Dashboard |
-| v1.1.0 | Global hotkey, PipelineState, Settings shortcut recorder |
-| v1.1.1 | Windows notifications, screenshot history persistence, UI polish |
-| v1.5.0 | Multi-provider (Gemini, Claude, Ollama), real TTS |
-| v2.0.0 | Auto Mode: continuous observation + context memory |
-| v3.0.0 | Agent Mode, plugin system, RAG |
+| v1.1.0 | Global hotkey, PipelineState, shortcut recorder |
+| v1.1.1 | Windows notifications, screenshot history persistence |
+| **v1.2.x** | **Persona Layer, Chat API, dual response, per-section settings save** |
+| v1.3.0 | Context integration: multi-turn memory + RAG |
+| v2.0.0 | Auto Mode: continuous observation |
+| v3.0.0 | Agent Mode, plugin system |
 
 ## License
 
