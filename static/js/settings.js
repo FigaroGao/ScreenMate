@@ -12,6 +12,7 @@
 
     var form = document.getElementById('settings-form');
     var btnTest = document.getElementById('btn-test-connection');
+    var btnTestChat = document.getElementById('btn-test-chat');
     var btnSave = document.getElementById('btn-save-settings');
     var btnReset = document.getElementById('btn-reset-settings');
 
@@ -53,23 +54,32 @@
         btnTest.addEventListener('click', async function () {
             var provSelect = document.getElementById('vision-provider-select');
             var provName = provSelect ? provSelect.value : 'mock';
-
             btnLoading(btnTest, 'Testing...');
             try {
                 var data = await api.post('/api/provider/test', {
-                    type: 'vision',
-                    provider: provName,
+                    type: 'vision', provider: provName,
                 });
-                if (data.success) {
-                    toast(data.message, 'success', 'Connection OK');
-                } else {
-                    toast(data.message, 'danger', 'Connection Failed');
-                }
-            } catch (err) {
-                toast(err.message, 'danger', 'Connection Error');
-            } finally {
-                btnRestore(btnTest);
-            }
+                toast(data.message, data.success ? 'success' : 'danger',
+                      data.success ? 'Vision OK' : 'Vision Failed');
+            } catch (err) { toast(err.message, 'danger'); }
+            finally { btnRestore(btnTest); }
+        });
+    }
+
+    // Test Chat Connection
+    if (btnTestChat) {
+        btnTestChat.addEventListener('click', async function () {
+            var provSelect = document.getElementById('chat-provider-select');
+            var provName = provSelect ? provSelect.value : 'mock';
+            btnLoading(btnTestChat, 'Testing...');
+            try {
+                var data = await api.post('/api/provider/test', {
+                    type: 'chat', provider: provName,
+                });
+                toast(data.message, data.success ? 'success' : 'danger',
+                      data.success ? 'Chat OK' : 'Chat Failed');
+            } catch (err) { toast(err.message, 'danger'); }
+            finally { btnRestore(btnTestChat); }
         });
     }
 

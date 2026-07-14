@@ -325,10 +325,40 @@ def api_test_provider() -> Any:
                 "message": f"Connection test error: {exc}",
             })
 
-    # For non-vision providers, just check registration
+    # For chat providers, make a real test call
+    if provider_type == "chat":
+        try:
+            from providers import create_chat
+            chat = create_chat(provider_name or None)
+            result = chat.chat(
+                messages=[{"role": "user", "content": "Say 'hello' in one word."}],
+            )
+            if result.success:
+                return jsonify({
+                    "success": True,
+                    "message": f"Connected to {provider_name} ({result.model}). "
+                               f"Latency: {result.latency_ms}ms. "
+                               f"Response: {result.content[:100]}",
+                    "latency_ms": result.latency_ms,
+                    "model": result.model,
+                })
+            else:
+                return jsonify({
+                    "success": False,
+                    "message": f"Connection failed: {result.error}",
+                })
+        except ValueError as exc:
+            return jsonify({"success": False, "message": str(exc)})
+        except Exception as exc:
+            return jsonify({
+                "success": False,
+                "message": f"Connection test error: {exc}",
+            })
+
+    # For other provider types, just check registration
     return jsonify({
         "success": True,
-        "message": f"Provider {provider_name} ({provider_type}) is registered. [Mock — no real test for non-vision providers yet]",
+        "message": f"Provider {provider_name} ({provider_type}) is registered.",
     })
 
 

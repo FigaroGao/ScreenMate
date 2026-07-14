@@ -29,7 +29,7 @@ class OpenAIChatProvider(BaseChatProvider):
     def __init__(self, config: Any = None) -> None:
         super().__init__(config)
         self._api_key: str = Config.CHAT_API_KEY
-        self._base_url: str = self._normalize_url(Config.CHAT_BASE_URL)
+        self._base_url: str = Config.CHAT_BASE_URL
         self._model: str = Config.CHAT_MODEL
         self._max_tokens: int = Config.CHAT_MAX_TOKENS
         self._temperature: float = Config.CHAT_TEMPERATURE
@@ -163,17 +163,6 @@ class OpenAIChatProvider(BaseChatProvider):
     @property
     def model_name(self) -> str:
         return self._model
-
-
-    @staticmethod
-    def _normalize_url(url: str) -> str:
-        """Ensure the URL ends with /v1 if it looks like a base URL."""
-        url = url.strip().rstrip("/")
-        if url and not url.endswith("/v1"):
-            # Auto-append /v1 for common OpenAI-compatible endpoints
-            # that need it (DeepSeek, OpenAI, etc.)
-            url += "/v1"
-        return url
 
 
 register_provider("chat", "openai", OpenAIChatProvider)
