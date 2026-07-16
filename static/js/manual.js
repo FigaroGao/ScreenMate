@@ -69,14 +69,16 @@
         }
     }
 
-    // Restore saved persona on load
+    // Restore saved persona on load + sync to server
     function restorePersona() {
         var saved = null;
         try { saved = localStorage.getItem('screenmate_persona'); } catch (_) {}
         if (saved && personaSelect.querySelector('option[value="' + saved + '"]')) {
             personaSelect.value = saved;
+            // Sync to server so hotkey can read it
+            api.post('/api/pipeline/persona', { persona: saved });
         }
-        // Also check server state
+        // Also check server state (in case another browser tab changed it)
         api.get('/api/pipeline/status').then(function (data) {
             if (data.success && data.pipeline.current_persona) {
                 var p = data.pipeline.current_persona;
