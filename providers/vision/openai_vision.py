@@ -28,6 +28,7 @@ from providers import register_provider
 from providers.base.vision import BaseVisionProvider
 from providers.response import ProviderResponse
 from modules.logger.logger import get_logger
+import json
 
 logger = get_logger(__name__)
 
@@ -134,6 +135,11 @@ class OpenAIVisionProvider(BaseVisionProvider):
                 base_url=self._base_url,
                 timeout=kwargs.pop("timeout", 60.0),
             )
+
+            # Merge custom params
+            custom = self._parse_custom_params(Config.VISION_CUSTOM_PARAMS)
+            for k, v in custom.items():
+                kwargs.setdefault(k, v)
 
             completion = client.chat.completions.create(
                 model=self._model,
@@ -268,4 +274,37 @@ class OpenAIVisionProvider(BaseVisionProvider):
 
 
 # Auto-register
+    @staticmethod
+    def _parse_custom_params(raw: str) -> dict:
+        """Parse custom params JSON and auto-convert types."""
+        if not raw:
+            return {}
+        try:
+            items = json.loads(raw) if isinstance(raw, str) else raw
+            if not isinstance(items, list):
+                return {}
+            result = {}
+            for p in items:
+                name = p.get("name", "").strip()
+                val = p.get("value", "")
+                if not name:
+                    continue
+                # Auto-convert numeric and boolean values
+                if isinstance(val, str):
+                    if val.lower() in ("true", "false"):
+                        val = val.lower() == "true"
+                    else:
+                        try:
+                            if "." in val:
+                                val = float(val)
+                            else:
+                                val = int(val)
+                        except ValueError:
+                            pass
+                result[name] = val
+            return result
+        except (json.JSONDecodeError, TypeError):
+            return {}
+
+
 register_provider("vision", "openai", OpenAIVisionProvider)

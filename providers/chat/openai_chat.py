@@ -19,6 +19,7 @@ from providers import register_provider
 from providers.base.chat import BaseChatProvider
 from providers.response import ProviderResponse
 from modules.logger.logger import get_logger
+import json
 
 logger = get_logger(__name__)
 
@@ -82,6 +83,10 @@ class OpenAIChatProvider(BaseChatProvider):
                 base_url=self._base_url,
                 timeout=kwargs.pop("timeout", 60.0),
             )
+            custom = self._parse_params(Config.CHAT_CUSTOM_PARAMS)
+            for k, v in custom.items():
+                kwargs.setdefault(k, v)
+
             completion = client.chat.completions.create(
                 model=self._model,
                 messages=full_messages,
@@ -163,6 +168,28 @@ class OpenAIChatProvider(BaseChatProvider):
     @property
     def model_name(self) -> str:
         return self._model
+
+
+    @staticmethod
+    def _parse_params(raw: str) -> dict:
+        if not raw: return {}
+        try:
+            items = json.loads(raw) if isinstance(raw, str) else raw
+            if not isinstance(items, list): return {}
+            result = {}
+            for p in items:
+                name = p.get("name", "").strip()
+                val = p.get("value", "")
+                if not name: continue
+                if isinstance(val, str):
+                    if val.lower() in ("true", "false"): val = (val.lower() == "true")
+                    else:
+                        try: val = float(val) if "." in val else int(val)
+                        except ValueError: pass
+                result[name] = val
+            return result
+        except (json.JSONDecodeError, TypeError):
+            return {}
 
 
 register_provider("chat", "openai", OpenAIChatProvider)

@@ -1,292 +1,232 @@
 /**
- * ScreenMate Settings — auto-load, save, reset, test connection.
+ * ScreenMate Settings — dynamic params, per-section save, test connections.
  */
-
 (function () {
     'use strict';
-
     var api = window.ScreenMate.api;
     var toast = window.ScreenMate.toast;
     var btnLoading = window.ScreenMate.btnLoading;
     var btnRestore = window.ScreenMate.btnRestore;
-
-    var form = document.getElementById('settings-form');
-    var btnTest = document.getElementById('btn-test-connection');
-    var btnTestChat = document.getElementById('btn-test-chat');
-    var btnSave = document.getElementById('btn-save-settings');
-    var btnReset = document.getElementById('btn-reset-settings');
+    var escapeHtml = window.ScreenMate.escapeHtml;
 
     // ==================================================================
-    // 1. Load current settings on page open
+    // 1. Load current settings from API
     // ==================================================================
     async function loadSettings() {
         try {
             var data = await api.get('/api/settings');
             if (!data.success || !data.settings) return;
-
             var s = data.settings;
-            // Fill each form field by name if it exists in the response
-            var fields = form.querySelectorAll('[name]');
-            fields.forEach(function (el) {
+            document.querySelectorAll('[name]').forEach(function (el) {
                 var key = el.getAttribute('name');
                 if (s[key] !== undefined) {
                     var val = s[key];
-                    // Don't fill masked API key placeholders
                     if (val === '***') val = '';
-                    if (el.type === 'checkbox') {
-                        el.checked = (val === true || val === 'true');
-                    } else {
-                        el.value = val;
-                    }
+                    if (el.type === 'checkbox') el.checked = (val === true || val === 'true');
+                    else el.value = val;
                 }
             });
-        } catch (err) {
-            console.warn('Failed to load settings:', err);
-        }
+            // Load custom params for each section
+            loadCustomParams('vision', s.VISION_CUSTOM_PARAMS);
+            loadCustomParams('chat', s.CHAT_CUSTOM_PARAMS);
+            loadCustomParams('tts', s.TTS_CUSTOM_PARAMS);
+        } catch (err) { console.warn('Load settings failed:', err); }
     }
 
-    loadSettings();
-
-    // ==================================================================
-    // 2. Test Connection (real for vision providers)
-    // ==================================================================
-    if (btnTest) {
-        btnTest.addEventListener('click', async function () {
-            var provSelect = document.getElementById('vision-provider-select');
-            var provName = provSelect ? provSelect.value : 'mock';
-            btnLoading(btnTest, 'Testing...');
-            try {
-                var data = await api.post('/api/provider/test', {
-                    type: 'vision', provider: provName,
-                });
-                toast(data.message, data.success ? 'success' : 'danger',
-                      data.success ? 'Vision OK' : 'Vision Failed');
-            } catch (err) { toast(err.message, 'danger'); }
-            finally { btnRestore(btnTest); }
-        });
-    }
-
-    // Test Chat Connection
-    if (btnTestChat) {
-        btnTestChat.addEventListener('click', async function () {
-            var provSelect = document.getElementById('chat-provider-select');
-            var provName = provSelect ? provSelect.value : 'mock';
-            btnLoading(btnTestChat, 'Testing...');
-            try {
-                var data = await api.post('/api/provider/test', {
-                    type: 'chat', provider: provName,
-                });
-                toast(data.message, data.success ? 'success' : 'danger',
-                      data.success ? 'Chat OK' : 'Chat Failed');
-            } catch (err) { toast(err.message, 'danger'); }
-            finally { btnRestore(btnTestChat); }
-        });
-    }
-
-    // ==================================================================
-    // 3. Save Settings
-    // ==================================================================
-    if (form) {
-        form.addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            // Build payload from all named fields
-            var formData = new FormData(form);
-            var payload = {};
-            formData.forEach(function (val, key) {
-                // Skip masked placeholder values
-                if (val === '***') return;
-                payload[key] = val;
+    function loadCustomParams(section, jsonStr) {
+        if (!jsonStr) return;
+        try {
+            var params = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr;
+            if (!Array.isArray(params)) return;
+            params.forEach(function (p) {
+                addParamRow(section, p.name || '', p.value || '');
             });
-
-            btnLoading(btnSave, 'Saving...');
-            try {
-                var data = await api.post('/api/settings', payload);
-                toast(data.message || 'Settings saved.', data.success ? 'success' : 'danger');
-                // Do NOT reload from API — it returns masked "***" for keys.
-                // Form values stay as-is since save succeeded.
-            } catch (err) {
-                toast(err.message, 'danger');
-            } finally {
-                btnRestore(btnSave);
-            }
-        });
+        } catch (_) {}
     }
 
     // ==================================================================
-    // 3b. Per-section Save buttons
+    // 2. Dynamic Parameter List Component
     // ==================================================================
-    document.querySelectorAll('.btn-section-save').forEach(function (btn) {
-        btn.addEventListener('click', async function () {
-            var section = btn.dataset.section;
-            var card = btn.closest('.card');
-            if (!card) return;
-            var fields = card.querySelectorAll('[name]');
-            var payload = {};
-            fields.forEach(function (el) {
-                if (el.value && el.value !== '***') {
-                    payload[el.getAttribute('name')] = el.value;
-                }
-            });
-            btnLoading(btn, 'Saving...');
-            try {
-                var data = await api.post('/api/settings', payload);
-                toast(data.message || 'Saved.', data.success ? 'success' : 'danger');
-            } catch (err) {
-                toast(err.message, 'danger');
-            } finally {
-                btnRestore(btn);
-            }
+    function addParamRow(section, name, value) {
+        var list = document.querySelector('#params-' + section + ' .param-list');
+        if (!list) return;
+        var row = document.createElement('div');
+        row.className = 'row g-1 mb-1 param-row';
+        row.innerHTML =
+            '<div class="col-5"><input type="text" class="form-control form-control-sm param-name" ' +
+            'placeholder="Parameter Name" value="' + escapeHtml(name || '') + '"></div>' +
+            '<div class="col-6"><input type="text" class="form-control form-control-sm param-value" ' +
+            'placeholder="Value" value="' + escapeHtml(value || '') + '"></div>' +
+            '<div class="col-1"><button type="button" class="btn btn-outline-danger btn-sm w-100 remove-param" ' +
+            'title="Remove"><i class="bi bi-x"></i></button></div>';
+        row.querySelector('.remove-param').addEventListener('click', function () { row.remove(); });
+        list.appendChild(row);
+    }
+
+    function getCustomParams(section) {
+        var params = [];
+        document.querySelectorAll('#params-' + section + ' .param-row').forEach(function (row) {
+            var n = row.querySelector('.param-name').value.trim();
+            if (n) params.push({ name: n, value: row.querySelector('.param-value').value });
+        });
+        return params;
+    }
+
+    // Wire "add param" buttons
+    document.querySelectorAll('.add-param').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var section = btn.closest('.custom-params').dataset.section;
+            addParamRow(section, '', '');
         });
     });
 
     // ==================================================================
-    // 4. Restore Defaults
+    // 3. Per-section Save
     // ==================================================================
+    document.querySelectorAll('.section-save').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+            var section = btn.dataset.section;
+            var card = btn.closest('.card');
+            if (!card) return;
+            var payload = {};
+            // Collect named fields in this card
+            card.querySelectorAll('[name]').forEach(function (el) {
+                if (el.value && el.value !== '***') payload[el.getAttribute('name')] = el.value;
+            });
+            // Collect custom params
+            var cpKey = ({
+                vision: 'VISION_CUSTOM_PARAMS',
+                chat: 'CHAT_CUSTOM_PARAMS',
+                tts: 'TTS_CUSTOM_PARAMS',
+            })[section];
+            if (cpKey) payload[cpKey] = JSON.stringify(getCustomParams(section));
+
+            btnLoading(btn, 'Saving...');
+            try {
+                var data = await api.post('/api/settings', payload);
+                toast(data.message || 'Saved.', data.success ? 'success' : 'danger');
+            } catch (err) { toast(err.message, 'danger'); }
+            finally { btnRestore(btn); }
+        });
+    });
+
+    // ==================================================================
+    // 4. Provider switch — reset params on change
+    // ==================================================================
+    document.querySelectorAll('[data-provider-select]').forEach(function (sel) {
+        sel.addEventListener('change', function () {
+            var section = sel.dataset.section;
+            // Clear custom params when switching providers
+            document.querySelectorAll('#params-' + section + ' .param-row').forEach(function (r) { r.remove(); });
+            // Clear API key field too
+            var keyEl = document.querySelector('[name="' + section.toUpperCase() + '_API_KEY"]');
+            if (keyEl) keyEl.value = '';
+        });
+    });
+
+    // ==================================================================
+    // 5. Test Vision / Test Chat
+    // ==================================================================
+    function testProvider(type) {
+        var provName = document.querySelector('[name="' + type.toUpperCase() + '_PROVIDER"]');
+        return async function () {
+            var name = provName ? provName.value : 'mock';
+            var btn = document.getElementById('btn-test-' + type);
+            btnLoading(btn, 'Testing...');
+            try {
+                // Save current section first so test uses latest settings
+                var sectionBtn = document.querySelector('.section-save[data-section="' + type + '"]');
+                if (sectionBtn) sectionBtn.click();
+                await new Promise(function (r) { setTimeout(r, 300); });
+                var data = await api.post('/api/provider/test', { type: type, provider: name });
+                toast(data.message, data.success ? 'success' : 'danger',
+                      data.success ? (type === 'vision' ? 'Vision OK' : 'Chat OK') : (type === 'vision' ? 'Vision Failed' : 'Chat Failed'));
+            } catch (err) { toast(err.message, 'danger'); }
+            finally { btnRestore(btn); }
+        };
+    }
+    var btnVision = document.getElementById('btn-test-vision');
+    var btnChat = document.getElementById('btn-test-chat');
+    if (btnVision) btnVision.addEventListener('click', testProvider('vision'));
+    if (btnChat) btnChat.addEventListener('click', testProvider('chat'));
+
+    // ==================================================================
+    // 6. Restore Defaults
+    // ==================================================================
+    var btnReset = document.getElementById('btn-reset-settings');
     if (btnReset) {
         btnReset.addEventListener('click', async function () {
-            if (!confirm('Reset all settings to defaults? This cannot be undone.')) return;
+            if (!confirm('Reset all settings to defaults?')) return;
             btnLoading(btnReset, 'Resetting...');
             try {
                 var data = await api.post('/api/settings/reset');
-                toast(data.message || 'Settings reset.', data.success ? 'success' : 'info');
-                if (data.success) {
-                    await loadSettings();
-                }
-            } catch (err) {
-                toast(err.message, 'danger');
-            } finally {
-                btnRestore(btnReset);
-            }
+                toast(data.message || 'Reset.', data.success ? 'success' : 'info');
+                if (data.success) { await loadSettings(); location.reload(); }
+            } catch (err) { toast(err.message, 'danger'); }
+            finally { btnRestore(btnReset); }
         });
     }
 
     // ==================================================================
-    // 5. Hotkey Controls
+    // 7. Hotkey Controls
     // ==================================================================
     var btnRecord = document.getElementById('btn-record-shortcut');
     var btnEnable = document.getElementById('btn-enable-hotkey');
     var btnDisable = document.getElementById('btn-disable-hotkey');
     var hotkeyDisplay = document.getElementById('hotkey-display');
     var hotkeyStatusText = document.getElementById('hotkey-status-text');
-
     var isRecording = false;
-    var recordedKeys = [];
 
-    // Load hotkey info on page open
     loadHotkeyInfo();
-
     async function loadHotkeyInfo() {
         try {
             var data = await api.get('/api/hotkey/status');
             if (data.success && data.hotkey) {
                 if (hotkeyDisplay) hotkeyDisplay.value = data.hotkey.shortcut || 'ctrl+shift+a';
-                if (hotkeyStatusText) {
-                    hotkeyStatusText.textContent = 'Status: ' +
-                        (data.hotkey.registered ? 'Active (' + data.hotkey.shortcut + ')' : 'Not registered');
-                }
+                if (hotkeyStatusText) hotkeyStatusText.textContent = 'Status: ' +
+                    (data.hotkey.registered ? 'Active (' + data.hotkey.shortcut + ')' : 'Not registered');
             }
-        } catch (err) {
-            console.warn('Failed to load hotkey info:', err);
-        }
+        } catch (_) {}
     }
 
-    // Record shortcut
     if (btnRecord) {
         btnRecord.addEventListener('click', function () {
-            if (isRecording) {
-                // Stop recording
-                stopRecording();
-                return;
-            }
-            // Start recording
+            if (isRecording) { stopRecording(); return; }
             isRecording = true;
-            recordedKeys = [];
-            btnRecord.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Listening... Press keys...';
-            btnRecord.classList.remove('btn-outline-warning');
-            btnRecord.classList.add('btn-warning');
+            btnRecord.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Listening...';
+            btnRecord.classList.remove('btn-outline-warning'); btnRecord.classList.add('btn-warning');
         });
     }
-
-    // Capture keydown during recording
     document.addEventListener('keydown', function (e) {
         if (!isRecording) return;
-        e.preventDefault();
-        e.stopPropagation();
-
+        e.preventDefault(); e.stopPropagation();
         var parts = [];
         if (e.ctrlKey) parts.push('ctrl');
         if (e.shiftKey) parts.push('shift');
         if (e.altKey) parts.push('alt');
         if (e.metaKey) parts.push('win');
-
-        // Ignore standalone modifier key presses
-        var nonModifiers = ['Control', 'Shift', 'Alt', 'Meta'];
-        if (nonModifiers.indexOf(e.key) === -1) {
-            var key = e.key.toLowerCase();
-            if (key === ' ') key = 'space';
-            parts.push(key);
-
-            var shortcut = parts.join('+');
-            finishRecording(shortcut);
+        if (['Control','Shift','Alt','Meta'].indexOf(e.key) === -1) {
+            var k = e.key.toLowerCase(); if (k === ' ') k = 'space';
+            parts.push(k);
+            finishRecording(parts.join('+'));
         }
     });
-
     async function finishRecording(shortcut) {
         stopRecording();
         if (hotkeyDisplay) hotkeyDisplay.value = shortcut;
-
         try {
             var data = await api.post('/api/hotkey/change', { shortcut: shortcut });
-            if (data.success) {
-                toast('Shortcut changed to ' + shortcut, 'success');
-                await loadHotkeyInfo();
-            } else {
-                toast(data.message, 'danger');
-            }
-        } catch (err) {
-            toast(err.message, 'danger');
-        }
+            toast(data.message, data.success ? 'success' : 'danger');
+            await loadHotkeyInfo();
+        } catch (err) { toast(err.message, 'danger'); }
     }
-
     function stopRecording() {
         isRecording = false;
-        recordedKeys = [];
-        if (btnRecord) {
-            btnRecord.innerHTML = '<i class="bi bi-record-circle me-1"></i> Record Shortcut';
-            btnRecord.classList.remove('btn-warning');
-            btnRecord.classList.add('btn-outline-warning');
-        }
+        if (btnRecord) { btnRecord.innerHTML = '<i class="bi bi-record-circle me-1"></i> Record Shortcut'; btnRecord.classList.remove('btn-warning'); btnRecord.classList.add('btn-outline-warning'); }
     }
+    if (btnEnable) btnEnable.addEventListener('click', async function () { btnLoading(btnEnable, 'Enabling...'); try { var d = await api.post('/api/hotkey/start'); toast(d.message, d.success ? 'success' : 'warning'); loadHotkeyInfo(); } catch (_) {} finally { btnRestore(btnEnable); } });
+    if (btnDisable) btnDisable.addEventListener('click', async function () { btnLoading(btnDisable, 'Disabling...'); try { var d = await api.post('/api/hotkey/stop'); toast(d.message, d.success ? 'success' : 'info'); loadHotkeyInfo(); } catch (_) {} finally { btnRestore(btnDisable); } });
 
-    // Enable / Disable
-    if (btnEnable) {
-        btnEnable.addEventListener('click', async function () {
-            btnLoading(btnEnable, 'Enabling...');
-            try {
-                var data = await api.post('/api/hotkey/start');
-                toast(data.message, data.success ? 'success' : 'warning');
-                await loadHotkeyInfo();
-            } catch (err) {
-                toast(err.message, 'danger');
-            } finally {
-                btnRestore(btnEnable);
-            }
-        });
-    }
-
-    if (btnDisable) {
-        btnDisable.addEventListener('click', async function () {
-            btnLoading(btnDisable, 'Disabling...');
-            try {
-                var data = await api.post('/api/hotkey/stop');
-                toast(data.message, data.success ? 'success' : 'info');
-                await loadHotkeyInfo();
-            } catch (err) {
-                toast(err.message, 'danger');
-            } finally {
-                btnRestore(btnDisable);
-            }
-        });
-    }
+    // Init
+    loadSettings();
 })();

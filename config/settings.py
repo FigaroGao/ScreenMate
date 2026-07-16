@@ -44,6 +44,7 @@ class Config:
     VISION_MAX_TOKENS: int = int(os.getenv("VISION_MAX_TOKENS", "1024"))
     VISION_TEMPERATURE: float = float(os.getenv("VISION_TEMPERATURE", "0.7"))
     VISION_TOP_P: float = float(os.getenv("VISION_TOP_P", "0.9"))
+    VISION_CUSTOM_PARAMS: str = os.getenv("VISION_CUSTOM_PARAMS", "")
 
     # ---- Chat Provider ----
     CHAT_PROVIDER: str = os.getenv("CHAT_PROVIDER", "mock")
@@ -53,6 +54,7 @@ class Config:
     CHAT_MAX_TOKENS: int = int(os.getenv("CHAT_MAX_TOKENS", "2048"))
     CHAT_TEMPERATURE: float = float(os.getenv("CHAT_TEMPERATURE", "0.7"))
     CHAT_TOP_P: float = float(os.getenv("CHAT_TOP_P", "0.9"))
+    CHAT_CUSTOM_PARAMS: str = os.getenv("CHAT_CUSTOM_PARAMS", "")
 
     # ---- TTS Provider ----
     TTS_PROVIDER: str = os.getenv("TTS_PROVIDER", "mock")
@@ -60,6 +62,7 @@ class Config:
     TTS_BASE_URL: str = os.getenv("TTS_BASE_URL", "")
     TTS_VOICE: str = os.getenv("TTS_VOICE", "default")
     TTS_SPEED: float = float(os.getenv("TTS_SPEED", "1.0"))
+    TTS_CUSTOM_PARAMS: str = os.getenv("TTS_CUSTOM_PARAMS", "")
 
     # ---- System Prompt ----
     SYSTEM_PROMPT: str = os.getenv(

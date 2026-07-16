@@ -5,183 +5,136 @@
 {% block content %}
 <h2 class="mb-4"><i class="bi bi-gear me-2"></i>Settings</h2>
 
-<form id="settings-form">
-    <!-- Vision Provider -->
-    <div class="card mb-3">
-        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-eye me-1"></i> Vision Provider</span>
-            <button type="button" class="btn btn-primary btn-sm btn-section-save" data-section="vision">
-                <i class="bi bi-check-lg me-1"></i> Save
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="row g-2">
-                <div class="col-md-3">
-                    <label class="form-label" for="vision-provider-select">Provider</label>
-                    <select class="form-select" id="vision-provider-select" name="VISION_PROVIDER">
-                        <option value="mock">Mock</option>
-                        <option value="openai">OpenAI Compatible</option>
-                    </select>
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label" for="vision-api-key">API Key</label>
-                    <input type="password" class="form-control" id="vision-api-key"
-                        name="VISION_API_KEY" placeholder="sk-...">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="vision-base-url">Base URL</label>
-                    <input type="text" class="form-control" id="vision-base-url"
-                        name="VISION_BASE_URL" placeholder="https://api.openai.com/v1">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="vision-model">Model Name</label>
-                    <input type="text" class="form-control" id="vision-model"
-                        name="VISION_MODEL_NAME" placeholder="gpt-4o" value="gpt-4o">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="vision-max-tokens">Max Tokens</label>
-                    <input type="number" class="form-control" id="vision-max-tokens"
-                        name="VISION_MAX_TOKENS" value="1024">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label" for="vision-temp">Temperature</label>
-                    <input type="number" class="form-control" id="vision-temp"
-                        name="VISION_TEMPERATURE" value="0.7" step="0.1" min="0" max="2">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label" for="vision-top-p">Top P</label>
-                    <input type="number" class="form-control" id="vision-top-p"
-                        name="VISION_TOP_P" value="0.9" step="0.1" min="0" max="1">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Chat Provider -->
-    <div class="card mb-3">
-        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-chat-dots me-1"></i> Chat Provider</span>
-            <button type="button" class="btn btn-primary btn-sm btn-section-save" data-section="chat">
-                <i class="bi bi-check-lg me-1"></i> Save
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="row g-2">
-                <div class="col-md-3">
-                    <label class="form-label" for="chat-provider-select">Provider</label>
-                    <select class="form-select" id="chat-provider-select" name="CHAT_PROVIDER">
-                        <option value="mock">Mock</option>
-                        <option value="openai">OpenAI Compatible</option>
-                    </select>
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label" for="chat-api-key">API Key</label>
-                    <input type="password" class="form-control" id="chat-api-key"
-                        name="CHAT_API_KEY" placeholder="sk-...">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label" for="chat-base-url">Base URL</label>
-                    <input type="text" class="form-control" id="chat-base-url"
-                        name="CHAT_BASE_URL" placeholder="https://api.openai.com/v1">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="chat-model">Model</label>
-                    <input type="text" class="form-control" id="chat-model"
-                        name="CHAT_MODEL" placeholder="gpt-4o" value="gpt-4o">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="chat-max-tokens">Max Tokens</label>
-                    <input type="number" class="form-control" id="chat-max-tokens"
-                        name="CHAT_MAX_TOKENS" value="2048">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label" for="chat-temp">Temperature</label>
-                    <input type="number" class="form-control" id="chat-temp"
-                        name="CHAT_TEMPERATURE" value="0.7" step="0.1" min="0" max="2">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label" for="chat-top-p">Top P</label>
-                    <input type="number" class="form-control" id="chat-top-p"
-                        name="CHAT_TOP_P" value="0.9" step="0.1" min="0" max="1">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- TTS Provider -->
-    <div class="card mb-3">
-        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-volume-up me-1"></i> TTS Provider</span>
-            <button type="button" class="btn btn-primary btn-sm btn-section-save" data-section="tts">
-                <i class="bi bi-check-lg me-1"></i> Save
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="row g-2">
-                <div class="col-md-4">
-                    <label class="form-label" for="tts-voice">Voice</label>
-                    <select class="form-select" id="tts-voice" name="TTS_VOICE">
-                        <option value="default">Default (Mock)</option>
-                        <option value="alloy">Alloy</option>
-                        <option value="echo">Echo</option>
-                        <option value="fable">Fable</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="tts-speed">Speed</label>
-                    <input type="number" class="form-control" id="tts-speed"
-                        name="TTS_SPEED" value="1.0" step="0.1" min="0.25" max="4">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Hotkey -->
-    <div class="card mb-3">
-        <div class="card-header fw-semibold">
-            <i class="bi bi-keyboard me-1"></i> Capture Shortcut
-        </div>
-        <div class="card-body">
-            <div class="row g-2 align-items-end">
-                <div class="col-md-4">
-                    <label class="form-label" for="hotkey-display">Current Shortcut</label>
-                    <input type="text" class="form-control font-monospace" id="hotkey-display"
-                        value="ctrl+shift+a" readonly>
-                </div>
-                <div class="col-md-3">
-                    <button type="button" class="btn btn-outline-warning w-100" id="btn-record-shortcut">
-                        <i class="bi bi-record-circle me-1"></i> Record Shortcut
-                    </button>
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-outline-success w-100" id="btn-enable-hotkey">
-                        <i class="bi bi-play-fill me-1"></i> Enable
-                    </button>
-                </div>
-                <div class="col-md-2">
-                    <button type="button" class="btn btn-outline-danger w-100" id="btn-disable-hotkey">
-                        <i class="bi bi-stop-fill me-1"></i> Disable
-                    </button>
-                </div>
-            </div>
-            <small class="text-secondary mt-2 d-block" id="hotkey-status-text">
-                Status: loading...
-            </small>
-        </div>
-    </div>
-
-    <!-- Global Actions -->
-    <div class="d-flex gap-2 mb-4">
-        <button type="button" class="btn btn-outline-secondary" id="btn-reset-settings">
-            <i class="bi bi-arrow-counterclockwise me-1"></i> Restore All Defaults
-        </button>
-        <button type="button" class="btn btn-outline-info" id="btn-test-connection">
-            <i class="bi bi-plug me-1"></i> Test Vision
-        </button>
-        <button type="button" class="btn btn-outline-info" id="btn-test-chat">
-            <i class="bi bi-plug me-1"></i> Test Chat
+<form id="settings-form" onsubmit="return false;">
+<!-- ================================================================== -->
+<!-- Vision Provider                                                     -->
+<!-- ================================================================== -->
+<div class="card mb-3">
+    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-eye me-1"></i> Vision Provider</span>
+        <button type="button" class="btn btn-primary btn-sm section-save" data-section="vision">
+            <i class="bi bi-check-lg me-1"></i> Save
         </button>
     </div>
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <label class="form-label">Provider</label>
+                <select class="form-select" name="VISION_PROVIDER" data-section="vision" data-provider-select>
+                    <option value="mock">Mock</option>
+                    <option value="openai">OpenAI Compatible</option>
+                </select>
+            </div>
+            <div class="col-md-5"><label class="form-label">API Key</label>
+                <input type="password" class="form-control" name="VISION_API_KEY" data-section="vision" placeholder="sk-..."></div>
+            <div class="col-md-4"><label class="form-label">Base URL</label>
+                <input type="text" class="form-control" name="VISION_BASE_URL" data-section="vision" placeholder="https://api.openai.com/v1"></div>
+            <div class="col-md-4"><label class="form-label">Model Name</label>
+                <input type="text" class="form-control" name="VISION_MODEL_NAME" data-section="vision" placeholder="gpt-4o"></div>
+        </div>
+        <div class="custom-params mt-3" id="params-vision" data-section="vision">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="small text-secondary fw-semibold">Custom Parameters</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm add-param"><i class="bi bi-plus"></i></button>
+            </div>
+            <div class="param-list"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- Chat Provider                                                       -->
+<!-- ================================================================== -->
+<div class="card mb-3">
+    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-chat-dots me-1"></i> Chat Provider</span>
+        <button type="button" class="btn btn-primary btn-sm section-save" data-section="chat">
+            <i class="bi bi-check-lg me-1"></i> Save
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <label class="form-label">Provider</label>
+                <select class="form-select" name="CHAT_PROVIDER" data-section="chat" data-provider-select>
+                    <option value="mock">Mock</option>
+                    <option value="openai">OpenAI Compatible</option>
+                </select>
+            </div>
+            <div class="col-md-5"><label class="form-label">API Key</label>
+                <input type="password" class="form-control" name="CHAT_API_KEY" data-section="chat" placeholder="sk-..."></div>
+            <div class="col-md-4"><label class="form-label">Base URL</label>
+                <input type="text" class="form-control" name="CHAT_BASE_URL" data-section="chat" placeholder="https://api.deepseek.com"></div>
+            <div class="col-md-4"><label class="form-label">Model Name</label>
+                <input type="text" class="form-control" name="CHAT_MODEL" data-section="chat" placeholder="deepseek-v4-flash"></div>
+        </div>
+        <div class="custom-params mt-3" id="params-chat" data-section="chat">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="small text-secondary fw-semibold">Custom Parameters</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm add-param"><i class="bi bi-plus"></i></button>
+            </div>
+            <div class="param-list"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- TTS Provider                                                        -->
+<!-- ================================================================== -->
+<div class="card mb-3">
+    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-volume-up me-1"></i> TTS Provider</span>
+        <button type="button" class="btn btn-primary btn-sm section-save" data-section="tts">
+            <i class="bi bi-check-lg me-1"></i> Save
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <label class="form-label">Provider</label>
+                <select class="form-select" name="TTS_PROVIDER" data-section="tts" data-provider-select>
+                    <option value="mock">Mock</option>
+                    <option value="openai">OpenAI TTS</option>
+                </select>
+            </div>
+            <div class="col-md-5"><label class="form-label">API Key</label>
+                <input type="password" class="form-control" name="TTS_API_KEY" data-section="tts" placeholder="sk-..."></div>
+            <div class="col-md-4"><label class="form-label">Base URL</label>
+                <input type="text" class="form-control" name="TTS_BASE_URL" data-section="tts" placeholder="https://api.openai.com/v1"></div>
+        </div>
+        <div class="custom-params mt-3" id="params-tts" data-section="tts">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="small text-secondary fw-semibold">Custom Parameters</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm add-param"><i class="bi bi-plus"></i></button>
+            </div>
+            <div class="param-list"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================== -->
+<!-- Hotkey                                                              -->
+<!-- ================================================================== -->
+<div class="card mb-3">
+    <div class="card-header fw-semibold"><i class="bi bi-keyboard me-1"></i> Capture Shortcut</div>
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4"><label class="form-label">Current Shortcut</label>
+                <input type="text" class="form-control font-monospace" id="hotkey-display" value="ctrl+shift+a" readonly></div>
+            <div class="col-md-3"><button type="button" class="btn btn-outline-warning w-100" id="btn-record-shortcut"><i class="bi bi-record-circle me-1"></i> Record Shortcut</button></div>
+            <div class="col-md-2"><button type="button" class="btn btn-outline-success w-100" id="btn-enable-hotkey"><i class="bi bi-play-fill me-1"></i> Enable</button></div>
+            <div class="col-md-2"><button type="button" class="btn btn-outline-danger w-100" id="btn-disable-hotkey"><i class="bi bi-stop-fill me-1"></i> Disable</button></div>
+        </div>
+        <small class="text-secondary mt-2 d-block" id="hotkey-status-text">Status: loading...</small>
+    </div>
+</div>
+
+<!-- Global Actions -->
+<div class="d-flex gap-2 mb-4">
+    <button type="button" class="btn btn-outline-secondary" id="btn-reset-settings"><i class="bi bi-arrow-counterclockwise me-1"></i> Restore All Defaults</button>
+    <button type="button" class="btn btn-outline-info" id="btn-test-vision"><i class="bi bi-plug me-1"></i> Test Vision</button>
+    <button type="button" class="btn btn-outline-info" id="btn-test-chat"><i class="bi bi-plug me-1"></i> Test Chat</button>
+</div>
 </form>
 {% endblock %}
 
