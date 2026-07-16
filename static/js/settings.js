@@ -139,16 +139,19 @@
                 if (sectionBtn) sectionBtn.click();
                 await new Promise(function (r) { setTimeout(r, 300); });
                 var data = await api.post('/api/provider/test', { type: type, provider: name });
+                var labels = { vision: 'Vision', chat: 'Chat', tts: 'TTS' };
                 toast(data.message, data.success ? 'success' : 'danger',
-                      data.success ? (type === 'vision' ? 'Vision OK' : 'Chat OK') : (type === 'vision' ? 'Vision Failed' : 'Chat Failed'));
+                      (labels[type] || 'Provider') + (data.success ? ' OK' : ' Failed'));
             } catch (err) { toast(err.message, 'danger'); }
             finally { btnRestore(btn); }
         };
     }
     var btnVision = document.getElementById('btn-test-vision');
     var btnChat = document.getElementById('btn-test-chat');
+    var btnTts = document.getElementById('btn-test-tts');
     if (btnVision) btnVision.addEventListener('click', testProvider('vision'));
     if (btnChat) btnChat.addEventListener('click', testProvider('chat'));
+    if (btnTts) btnTts.addEventListener('click', testProvider('tts'));
 
     // ==================================================================
     // 6. Restore Defaults

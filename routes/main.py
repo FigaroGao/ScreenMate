@@ -355,6 +355,33 @@ def api_test_provider() -> Any:
                 "message": f"Connection test error: {exc}",
             })
 
+    # For TTS providers, make a real test call
+    if provider_type == "tts":
+        try:
+            from providers import create_tts
+            tts = create_tts(provider_name or None)
+            result = tts.synthesize("Hello, this is a test from ScreenMate.")
+            if result.success:
+                return jsonify({
+                    "success": True,
+                    "message": f"Connected to {provider_name}. "
+                               f"Latency: {result.latency_ms}ms. "
+                               f"Audio: {result.content[:80]}",
+                    "latency_ms": result.latency_ms,
+                })
+            else:
+                return jsonify({
+                    "success": False,
+                    "message": f"Connection failed: {result.error}",
+                })
+        except ValueError as exc:
+            return jsonify({"success": False, "message": str(exc)})
+        except Exception as exc:
+            return jsonify({
+                "success": False,
+                "message": f"TTS test error: {exc}",
+            })
+
     # For other provider types, just check registration
     return jsonify({
         "success": True,
