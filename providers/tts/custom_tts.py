@@ -91,19 +91,11 @@ class CustomTTSProvider(BaseTTSProvider):
             if "json" in content_type or not audio_bytes or len(audio_bytes) < 100:
                 try:
                     data = resp.json()
-                    # Check for audio URL in response
-                    url = data.get("audioUrl") or data.get("url") or data.get("audio_url") or ""
+                    url = CustomTTSProvider._find_audio_url(data)
                     if url:
+                        logger.info("CustomTTS: fetching audio from %s", url[:120])
                         r2 = requests.get(url, timeout=60)
                         audio_bytes = r2.content
-                    # Check nested output
-                    if not audio_bytes and "output" in data:
-                        out = data["output"]
-                        if isinstance(out, dict):
-                            url = out.get("audio_url") or out.get("url") or ""
-                            if url:
-                                r2 = requests.get(url, timeout=60)
-                                audio_bytes = r2.content
                 except Exception:
                     audio_bytes = resp.content
 
@@ -249,6 +241,31 @@ class CustomTTSProvider(BaseTTSProvider):
         if data[:4] == b"OggS":
             return "ogg"
         return "mp3"
+
+
+    @staticmethod
+    def _find_audio_url(data: Any) -> str:
+        """Recursively search nested JSON for an audio URL.
+
+        Checks known key names: audio, audioUrl, url, audio_url, streamUrl.
+        Handles responses like Voku's ``{"data": {"audio": "https://..."}}``.
+        """
+        if isinstance(data, dict):
+            for key in ("audio", "audioUrl", "url", "audio_url", "streamUrl"):
+                val = data.get(key)
+                if isinstance(val, str) and (val.startswith("http://") or val.startswith("https://")):
+                    return val
+            # Recurse into nested objects
+            for v in data.values():
+                result = CustomTTSProvider._find_audio_url(v)
+                if result:
+                    return result
+        elif isinstance(data, list):
+            for item in data:
+                result = CustomTTSProvider._find_audio_url(item)
+                if result:
+                    return result
+        return ""
 
 
 register_provider("tts", "custom", CustomTTSProvider)
