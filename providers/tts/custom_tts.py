@@ -58,9 +58,10 @@ class CustomTTSProvider(BaseTTSProvider):
         body = self._build_body(text, **kwargs)
 
         logger.info(
-            "CustomTTS: POST %s (text_len=%d)",
-            self._base_url, len(text),
+            "CustomTTS: POST %s (text_len=%d, body_keys=%s)",
+            self._base_url, len(text), list(body.keys()),
         )
+        logger.debug("CustomTTS body: %s", _json.dumps(body, ensure_ascii=False)[:500])
 
         try:
             headers = {"Content-Type": "application/json"}
@@ -187,22 +188,13 @@ class CustomTTSProvider(BaseTTSProvider):
         try:
             items = _json.loads(raw) if isinstance(raw, str) else raw
             if isinstance(items, list):
-                # Convert name/value pairs to a dict
                 result = {}
                 for p in items:
                     name = p.get("name", "").strip()
                     val = p.get("value", "")
                     if not name:
                         continue
-                    if isinstance(val, str):
-                        if val.lower() in ("true", "false"):
-                            val = (val.lower() == "true")
-                        else:
-                            try:
-                                val = float(val) if "." in val else int(val)
-                            except ValueError:
-                                pass
-                    # Support nested keys like "input.text" → {"input": {"text": ...}}
+                    val = CustomTTSProvider._coerce_value(val)
                     if "." in name:
                         parts = name.split(".")
                         d = result
@@ -217,6 +209,34 @@ class CustomTTSProvider(BaseTTSProvider):
             return {}
         except (_json.JSONDecodeError, TypeError):
             return {}
+
+    @staticmethod
+    def _coerce_value(val):
+        """Coerce a string value to a typed Python value.
+
+        Handles: JSON arrays/objects, booleans, numbers, null, plain strings.
+        """
+        if not isinstance(val, str):
+            return val
+        s = val.strip()
+        # JSON array or object
+        if (s.startswith("[") and s.endswith("]")) or (s.startswith("{") and s.endswith("}")):
+            try:
+                return _json.loads(s)
+            except (_json.JSONDecodeError, ValueError):
+                pass
+        # Booleans
+        if s.lower() in ("true", "false"):
+            return s.lower() == "true"
+        # Null
+        if s.lower() == "null":
+            return None
+        # Numbers
+        try:
+            return float(s) if "." in s else int(s)
+        except ValueError:
+            pass
+        return s
 
     @staticmethod
     def _detect_format(data: bytes) -> str:
